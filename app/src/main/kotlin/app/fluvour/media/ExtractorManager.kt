@@ -57,24 +57,36 @@ class ExtractorManager @Inject constructor(@ApplicationContext context: Context)
     /** Fire and forget; used at app start. */
     fun checkInBackground() { scope.launch { checkForUpdate() } }
 
-    /** [force] skips the 6 hour wait (still at least 5 minutes between checks). Returns Updated if a newer extractor is now active. */
-    suspend fun checkForUpdate(force: Boolean = false): UpdateResult = updateLock.withLock {
-        withContext(Dispatchers.IO) { runCatching { doCheck(force) }.getOrElse { Log.w(TAG, "update check failed", it); UpdateResult.Failed(it.message ?: it.javaClass.simpleName) } }
+    /** True when this build knows where to look for updates. */
+    fun isConfigured(): Boolean = BuildConfig.EXTRACTOR_MANIFEST_URL.isNotBlank()
+
+    /** True when a downloaded extractor (not the built-in one) is in use. */
+    fun isDownloaded(): Boolean = prefs.getString(KEY_VERSION, null) != null
+
+    /** When the update address was last asked (epoch ms), 0 = never. */
+    fun lastCheckAt(): Long = prefs.getLong(KEY_LAST_CHECK, 0)
+
+    /**
+     * [force] skips the 6 hour wait (still at least 5 minutes between checks). [manual] (the Settings button) skips every wait.
+     * Returns Updated if a newer extractor is now active.
+     */
+    suspend fun checkForUpdate(force: Boolean = false, manual: Boolean = false): UpdateResult = updateLock.withLock {
+        withContext(Dispatchers.IO) { runCatching { doCheck(force, manual) }.getOrElse { Log.w(TAG, "update check failed", it); UpdateResult.Failed(it.message ?: it.javaClass.simpleName) } }
     }
 
     // ---- update ----
 
-    private fun doCheck(force: Boolean): UpdateResult {
+    private fun doCheck(force: Boolean, manual: Boolean): UpdateResult {
         if (BuildConfig.EXTRACTOR_MANIFEST_URL.isBlank()) return UpdateResult.Skipped
         val now = System.currentTimeMillis()
-        val gap = if (force) 5 * MINUTE else 6 * HOUR
+        val gap = if (manual) 0L else if (force) 5 * MINUTE else 6 * HOUR
         if (now - prefs.getLong(KEY_LAST_CHECK, 0) < gap) return UpdateResult.Skipped
         prefs.edit().putLong(KEY_LAST_CHECK, now).apply()
 
         val m = fetchManifest()
         if (m.api != ExtractorApi.VERSION) return UpdateResult.UpToDate            // built for another app generation: not for us
         if (compareVersions(m.version, backend().extractorVersion) <= 0) return UpdateResult.UpToDate
-        if (prefs.getString(KEY_REJECTED, null) == m.version && now - prefs.getLong(KEY_REJECTED_AT, 0) < DAY) return UpdateResult.Skipped
+        if (!manual && prefs.getString(KEY_REJECTED, null) == m.version && now - prefs.getLong(KEY_REJECTED_AT, 0) < DAY) return UpdateResult.Skipped
 
         val file = download(m)
         try {

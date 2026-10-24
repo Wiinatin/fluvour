@@ -113,6 +113,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit, onReplayIntro: () -> Un
             Sm(status ?: "Optional. Sync keeps your cards safe and enables AI pictures. Everything else works offline.", Modifier.padding(top = 10.dp), size = 12.sp)
         }
         Group("Dictionaries") { DictionariesGroup(s.targetLang) }
+        Group("YouTube extractor") { ExtractorGroup() }
         Group("Export to Anki") {
             val exportStatus by vm.exportStatus.collectAsStateWithLifecycle()
             val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri -> if (uri != null) vm.exportToAnki(uri) }
