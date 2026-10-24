@@ -51,7 +51,9 @@ jobs:
 
       - name: Build plugin (fails here if NewPipeExtractor changed its API; nothing gets published then)
         if: steps.plan.outputs.build == 'true'
-        run: ./gradlew :extractor-plugin:assembleDebug -Pnewpipe.version=${{ steps.plan.outputs.tag }}
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :extractor-plugin:assembleDebug -Pnewpipe.version=${{ steps.plan.outputs.tag }}
 
       - name: Publish
         if: steps.plan.outputs.build == 'true'
