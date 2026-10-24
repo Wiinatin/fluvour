@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Live spectrum in the video scrubber: Android requires this to analyse the app's own audio. Nothing is recorded. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- Screen lookup (Phase 2B): floating button over other apps, screen capture, and the notification Android requires for it -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Mini player: video/audio keeps playing in the background and with the screen off, with a media notification -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <queries>
+        <intent><action android:name="android.intent.action.TTS_SERVICE"/></intent>
+    </queries>
+    <application
+        android:name=".FluvourApp"
+        android:label="Fluvour"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:allowBackup="false"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <!-- Mini player: media notification + background playback -->
+        <service android:name=".media.PlaybackService" android:exported="true" android:foregroundServiceType="mediaPlayback">
+            <intent-filter><action android:name="androidx.media3.session.MediaSessionService"/></intent-filter>
+        </service>
+        <service android:name=".ocr.OverlayService" android:exported="false" android:foregroundServiceType="mediaProjection"/>
+        <activity android:name=".ocr.CaptureRequestActivity" android:exported="false" android:theme="@style/Theme.Fluvour.Transparent"
+            android:excludeFromRecents="true" android:taskAffinity=""/>
+        <activity android:name=".ocr.LookupActivity" android:exported="false" android:theme="@style/Theme.Fluvour.Transparent"
+            android:excludeFromRecents="true" android:taskAffinity="" android:windowSoftInputMode="adjustResize"/>
+        <!-- Optional: only reports which app is in front -->
+        <service android:name=".ocr.ForegroundAppService" android:exported="true" android:label="@string/ocr_a11y_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/ocr_accessibility"/>
+        </service>
+    </application>
+</manifest>

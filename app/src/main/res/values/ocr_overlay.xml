@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ocr_a11y_label">Fluvour: app name for screen lookup</string>
+    <string name="ocr_a11y_description">Lets Fluvour note which app you were reading, so saved sentences say where they came from. It cannot read your screen.</string>
+    <!-- Transparent windows: the app you were reading stays visible behind Fluvour's sheet. -->
+    <style name="Theme.Fluvour.Transparent" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+</resources>

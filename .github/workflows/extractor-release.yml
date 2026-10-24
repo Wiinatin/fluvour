@@ -1,0 +1,74 @@
+name: Extractor plugin
+
+# Every 6 hours: if NewPipeExtractor has a release the app does not have yet, build a plugin APK from it
+# and publish it. The app downloads it by itself (see EXTRACTOR_AUTOUPDATE.md).
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "NewPipeExtractor tag to build (blank = latest release)"
+        required: false
+
+permissions:
+  contents: write
+
+env:
+  # Defaults to this repo. For a private app repo, set the variable EXTRACTOR_RELEASE_REPO to a small public repo
+  # and the secret EXTRACTOR_RELEASE_TOKEN to a token that can write releases there.
+  RELEASE_REPO: ${{ vars.EXTRACTOR_RELEASE_REPO || github.repository }}
+  GH_TOKEN: ${{ secrets.EXTRACTOR_RELEASE_TOKEN || github.token }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out what to build
+        id: plan
+        run: |
+          TAG="${{ inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG=$(curl -sIL -o /dev/null -w '%{url_effective}' https://github.com/TeamNewPipe/NewPipeExtractor/releases/latest | sed 's#.*/##')
+          fi
+          echo "$TAG" | grep -Eq '^v[0-9]+(\.[0-9]+)*$' || { echo "Unexpected tag: $TAG"; exit 1; }
+          API=$(grep -oP 'const val VERSION = \K[0-9]+' extractor-api/src/main/kotlin/app/fluvour/extractor/api/ExtractorApi.kt)
+          LIVE=$(curl -sL "https://github.com/$RELEASE_REPO/releases/download/extractor-latest/latest.json" || true)
+          if echo "$LIVE" | jq -e --arg v "$TAG" --argjson a "$API" '.version==$v and .api==$a' >/dev/null 2>&1; then
+            echo "Already published: $TAG (API $API)"; echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"; echo "api=$API" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v4
+        if: steps.plan.outputs.build == 'true'
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.plan.outputs.build == 'true'
+
+      - name: Build plugin (fails here if NewPipeExtractor changed its API; nothing gets published then)
+        if: steps.plan.outputs.build == 'true'
+        run: ./gradlew :extractor-plugin:assembleDebug -Pnewpipe.version=${{ steps.plan.outputs.tag }}
+
+      - name: Publish
+        if: steps.plan.outputs.build == 'true'
+        run: |
+          TAG=${{ steps.plan.outputs.tag }}; API=${{ steps.plan.outputs.api }}
+          OUT="NewPipeExtractor-$TAG-api$API.apk"
+          cp extractor-plugin/build/outputs/apk/debug/extractor-plugin-debug.apk "$OUT"
+          SHA=$(sha256sum "$OUT" | cut -d' ' -f1)
+          REL="np-$TAG-api$API"
+          if gh release view "$REL" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
+            gh release upload "$REL" "$OUT" --clobber --repo "$RELEASE_REPO"
+          else
+            gh release create "$REL" "$OUT" --repo "$RELEASE_REPO" --latest=false \
+              --title "NewPipeExtractor $TAG (API $API)" --notes "Plugin build for the Fluvour app. Not meant to be installed."
+          fi
+          URL="https://github.com/$RELEASE_REPO/releases/download/$REL/$OUT"
+          jq -n --argjson api "$API" --arg v "$TAG" --arg u "$URL" --arg s "$SHA" '{api:$api,version:$v,url:$u,sha256:$s}' > latest.json
+          gh release view extractor-latest --repo "$RELEASE_REPO" >/dev/null 2>&1 || \
+            gh release create extractor-latest --repo "$RELEASE_REPO" --latest=false --title "Latest extractor (pointer)" --notes "Rolling pointer the app reads. Do not edit."
+          gh release upload extractor-latest latest.json --clobber --repo "$RELEASE_REPO"
