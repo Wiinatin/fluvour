@@ -81,7 +81,9 @@ fun BoxScope.MiniPlayer(vm: PlayerViewModel, visible: Boolean, onReturn: () -> U
                                 vm.miniRight = right; vm.miniYFrac = if (maxY > m) (pos.value.y - m) / (maxY - m) else 0f
                                 scope.launch { pos.animateTo(Offset(if (right) maxX else m, pos.value.y)) }
                             }
-                        ))
+                        )
+                    }
+                )
             }
         }
     }
