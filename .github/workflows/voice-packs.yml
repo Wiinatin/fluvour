@@ -1,0 +1,33 @@
+name: Voice packs
+
+# Run by hand from the Actions tab (Run workflow). Downloads the official sherpa-onnx voice models, repackages each as a
+# zip, writes packs.json (sizes and sha256) and publishes everything to the release tagged "voicepacks".
+# The app reads packs.json from there (see tools/voicepacks/build_packs.py and docs/VOICE_PACKS.md).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # Same idea as the "Extractor plugin" workflow: defaults to this repo. The repo must be public, because the app
+  # downloads the packs without logging in.
+  RELEASE_REPO: ${{ vars.EXTRACTOR_RELEASE_REPO || github.repository }}
+  GH_TOKEN: ${{ secrets.EXTRACTOR_RELEASE_TOKEN || github.token }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the packs
+        run: python3 tools/voicepacks/build_packs.py out
+
+      - name: Publish to the voicepacks release
+        run: |
+          cd out
+          rm -rf _cache
+          ls -l
+          gh release delete voicepacks --repo "$RELEASE_REPO" --yes --cleanup-tag || true
+          gh release create voicepacks --repo "$RELEASE_REPO" --title "Voice packs" --notes-file RELEASE_NOTES.md *.zip packs.json
