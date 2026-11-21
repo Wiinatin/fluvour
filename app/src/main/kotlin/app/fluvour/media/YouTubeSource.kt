@@ -1,5 +1,7 @@
 package app.fluvour.media
 
+import app.fluvour.lyrics.LyricsFinder
+import app.fluvour.lyrics.LyricsPrefs
 import app.fluvour.extractor.api.HttpRequest
 import app.fluvour.extractor.api.SubtitleTrack
 import app.fluvour.reading.ClipMeasurer
@@ -25,6 +27,7 @@ class ClipSubtitles(val title: String, val uploader: String?, val durationMs: Lo
  */
 @Singleton
 class YouTubeSource @Inject constructor(private val extractor: ExtractorManager, @dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context) : MediaSource {
+    private val lyricsFinder = LyricsFinder(java.io.File(context.filesDir, "lyrics"))
 
     init { YouTubeGuard.attach(context) }
 
@@ -143,6 +146,18 @@ class YouTubeSource @Inject constructor(private val extractor: ExtractorManager,
                     else -> "Found ${tracks.size} subtitle track(s) for \"$lang\" but could not read them (${tracks.joinToString { it.suffix ?: "?" }})."
                 }
             } else if (used.isAuto) note = "Automatic subtitles: they can contain mistakes." + wordTimeProbe(info.subtitles, want, used)
+            // Word-synced lyrics from other places (SimpMusic, Kugou, LRCLIB). A verified word-sync beats YouTube's own lines.
+            val hasWordTimes = lines.any { it.words.size > 1 } && used?.isAuto == false
+            if (LyricsPrefs.enabled && !hasWordTimes) {
+                val vid = Regex("""(?:v=|youtu\.be/|/shorts/|/embed/)([A-Za-z0-9_-]{11})""").find(url)?.groupValues?.get(1)
+                if (vid != null) {
+                    val found = runCatching { lyricsFinder.find(vid, info.title, info.uploader, info.durationSeconds.toInt().coerceAtLeast(0), lang, lines) }.getOrNull()
+                    if (found != null && (found.wordSynced || lines.isEmpty())) {
+                        lines = found.lines
+                        note = "Lyrics from ${found.source}" + if (found.wordSynced) " (word-synced)." else " (line-synced)."
+                    }
+                }
+            }
             // Subtitles in the person's own language, for the bilingual switch. A failure here never stops the video.
             var translation = emptyList<SubLine>()
             val native = nativeLang?.substringBefore('-')?.lowercase()

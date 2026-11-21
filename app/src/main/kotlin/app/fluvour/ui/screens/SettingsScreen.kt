@@ -80,6 +80,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit, onReplayIntro: () -> Un
                 FStepper(s.clipCount.toString(), { vm.setClipCount((s.clipCount - 1).coerceAtLeast(1)) }, { vm.setClipCount((s.clipCount + 1).coerceAtMost(30)) })
             })
             ClipLibraryRows(s.clipLibrary, { vm.setClipLibrary(it) })
+            SwitchRow("Find synced lyrics", s.lyricsFinder, { vm.setLyricsFinder(it) })
         }
         Group("Reading") {
             SettingRow("Text size", sub = "In the reader", trailing = {

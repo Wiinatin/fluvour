@@ -96,6 +96,7 @@ class AppViewModel @Inject constructor(
     fun setAutoPlay(on: Boolean) = viewModelScope.launch { settingsRepo.setAutoPlay(on) }
     fun setArt(on: Boolean) = viewModelScope.launch { settingsRepo.setArt(on) }
     fun setReduceMotion(on: Boolean) = viewModelScope.launch { settingsRepo.setReduceMotion(on) }
+    fun setLyricsFinder(on: Boolean) = viewModelScope.launch { settingsRepo.setLyricsFinder(on) }
 
     fun saveCard(existing: CardEntity?, word: String, meaning: String, example: String, notes: String, sentenceId: String? = null,
                  variantWord: String = "", variantExample: String = "", root: String = "", lemma: String = "", variantExampleMeaning: String = "") =

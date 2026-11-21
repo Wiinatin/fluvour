@@ -81,7 +81,7 @@ fun FluvourRoot(vm: AppViewModel = hiltViewModel()) {
     LaunchedEffect(hasVideo) { if (hasVideo && Build.VERSION.SDK_INT >= 33) askNotif.launch(Manifest.permission.POST_NOTIFICATIONS) }
     val settings by vm.settings.collectAsStateWithLifecycle()
     val s = settings ?: return
-    SideEffect { app.fluvour.ui.art.ArtPrefs.enabled = s.art; app.fluvour.ui.art.ArtPrefs.reduceMotion = s.reduceMotion }
+    SideEffect { app.fluvour.ui.art.ArtPrefs.enabled = s.art; app.fluvour.ui.art.ArtPrefs.reduceMotion = s.reduceMotion; app.fluvour.lyrics.LyricsPrefs.enabled = s.lyricsFinder }
     FluvourTheme(Themes.byId(s.theme), s.mode, s.targetLang) {
         val nav = rememberNavController()
         val route = nav.currentBackStackEntryAsState().value?.destination?.route

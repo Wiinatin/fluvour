@@ -42,6 +42,7 @@ data class Settings(
     val clipLibrary: Boolean = true,  // grow the local clip library in the background (charging, Wi-Fi)
     val art: Boolean = true,          // Settings > Illustrations (saved, so it survives a restart)
     val reduceMotion: Boolean = false // Settings > Reduce motion (saved)
+    val lyricsFinder: Boolean = true // Settings > Watch > Find synced lyrics (saved)
 )
 
 @Singleton
@@ -57,6 +58,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val ctx
     private val kClipLibrary = booleanPreferencesKey("clip_library")
     private val kArt = booleanPreferencesKey("art_enabled")
     private val kReduce = booleanPreferencesKey("reduce_motion")
+    private val kLyrics = booleanPreferencesKey("lyrics_finder")
     private fun kLevel(lang: String) = stringPreferencesKey("level_$lang")
     private val kReadMode = stringPreferencesKey("read_mode")
     private val kReadTheme = stringPreferencesKey("read_theme")
@@ -76,6 +78,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val ctx
             clipLibrary = p[kClipLibrary] ?: true,
             art = p[kArt] ?: true,
             reduceMotion = p[kReduce] ?: false,
+            lyricsFinder = p[kLyrics] ?: true,
             levels = p.asMap().entries.mapNotNull { (k, v) -> if (k.name.startsWith("level_") && v is String) k.name.removePrefix("level_") to v else null }.toMap()
         )
     }
@@ -105,6 +108,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val ctx
     suspend fun setClipLibrary(on: Boolean) = ctx.store.edit { it[kClipLibrary] = on }
     suspend fun setArt(on: Boolean) = ctx.store.edit { it[kArt] = on }
     suspend fun setReduceMotion(on: Boolean) = ctx.store.edit { it[kReduce] = on }
+    suspend fun setLyricsFinder(on: Boolean) = ctx.store.edit { it[kLyrics] = on }
     suspend fun setLevel(lang: String, code: String) = ctx.store.edit { it[kLevel(lang)] = code }
 }
 
