@@ -18,6 +18,7 @@ import app.fluvour.ui.theme.Fluvour
 fun BrowseScreen(vm: AppViewModel, onBack: () -> Unit, onEdit: (String?) -> Unit) {
     val cards by vm.cards.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
+    var toDelete by remember { mutableStateOf<app.fluvour.data.CardEntity?>(null) }
     val now = System.currentTimeMillis()
     val shown = remember(cards, query) {
         val q = query.trim()
@@ -32,9 +33,21 @@ fun BrowseScreen(vm: AppViewModel, onBack: () -> Unit, onEdit: (String?) -> Unit
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
             items(shown, key = { it.id }) { card ->
                 val due = card.dueAt == null || card.dueAt <= now
-                FRow(card.word, subtitle = card.meaning, titleFont = targetFont(), titleSize = 20.sp, onClick = { onEdit(card.id) },
-                    trailing = { Tag(if (due) "Due" else "Done") })
+                // swipe a card left to delete it, the same gesture as the topics in Output; a dialog asks first
+                SwipeToRemove(onRemove = { toDelete = card }) {
+                    FRow(card.word, subtitle = card.meaning, titleFont = targetFont(), titleSize = 20.sp, onClick = { onEdit(card.id) },
+                        trailing = { Tag(if (due) "Due" else "Done") })
+                }
             }
         }
+    }
+    toDelete?.let { d ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { toDelete = null }, containerColor = Fluvour.colors.card,
+            title = { androidx.compose.material3.Text("Delete this card?") },
+            text = { androidx.compose.material3.Text("${d.word} and its review history will be removed from your reviews.") },
+            confirmButton = { androidx.compose.material3.TextButton({ vm.deleteCard(d.id); toDelete = null }) { androidx.compose.material3.Text("Delete") } },
+            dismissButton = { androidx.compose.material3.TextButton({ toDelete = null }) { androidx.compose.material3.Text("Cancel") } }
+        )
     }
 }

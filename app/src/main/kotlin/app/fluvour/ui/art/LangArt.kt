@@ -5,6 +5,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Paint
@@ -54,6 +58,8 @@ internal class LangScene(
     val grads: Array<LangGrad>, val colors: LongArray, val nodes: Array<LangNode>,
 ) {
     val clipPaths: Array<Path?> = arrayOfNulls(clips.size)
+    /** True for nodes with no animation step in their chain: they look the same every frame. */
+    val isStatic: BooleanArray by lazy { BooleanArray(nodes.size) { i -> chains[nodes[i].c].none { it in 1000..1999 } } }
 }
 
 private val easeInOut = CubicBezierEasing(0.42f, 0f, 0.58f, 1f)
@@ -61,15 +67,15 @@ private val easeOut = CubicBezierEasing(0f, 0f, 0.58f, 1f)
 
 /** Language codes that have their own art. */
 internal object LangArt {
-    val codes = setOf("zh", "ko", "es", "fr", "de", "vi", "id")
+    val codes = setOf("zh", "ko", "es", "fr", "de", "vi", "id", "ms")
     fun has(lang: String) = lang in codes
     fun mark(lang: String): LangScene? = when (lang) {
         "zh" -> ZhArt.mark; "ko" -> KoArt.mark; "es" -> EsArt.mark; "fr" -> FrArt.mark
-        "de" -> DeArt.mark; "vi" -> ViArt.mark; "id" -> IdArt.mark; else -> null
+        "de" -> DeArt.mark; "vi" -> ViArt.mark; "id" -> IdArt.mark; "ms" -> MsArt.mark; else -> null
     }
     fun ambient(lang: String): LangScene? = when (lang) {
         "zh" -> ZhArt.ambient; "ko" -> KoArt.ambient; "es" -> EsArt.ambient; "fr" -> FrArt.ambient
-        "de" -> DeArt.ambient; "vi" -> ViArt.ambient; "id" -> IdArt.ambient; else -> null
+        "de" -> DeArt.ambient; "vi" -> ViArt.ambient; "id" -> IdArt.ambient; "ms" -> MsArt.ambient; else -> null
     }
 }
 
@@ -154,10 +160,14 @@ private fun setMatrix(m: FloatArray) {
  * Draws [s] in its own coordinate space at the current origin (marks are 140x140, ambient is 296x300).
  * [t] is seconds on the animation clock; pass a negative value for a still frame (Reduce motion). [alpha] multiplies everything.
  */
-internal fun DrawScope.drawLangScene(s: LangScene, pal: ArtPalette, t: Float, alpha: Float = 1f) {
+/** [part]: 0 = all nodes, 1 = only static nodes, 2 = only animated nodes. */
+internal fun DrawScope.drawLangScene(s: LangScene, pal: ArtPalette, t: Float, alpha: Float = 1f, part: Int = 0) {
     val cv = drawContext.canvas
     val m = scratch
-    for (n in s.nodes) {
+    for (ni in s.nodes.indices) {
+        if (part == 1 && !s.isStatic[ni]) continue
+        if (part == 2 && s.isStatic[ni]) continue
+        val n = s.nodes[ni]
         val chain = s.chains[n.c]
         m[0] = 1f; m[1] = 0f; m[2] = 0f; m[3] = 1f; m[4] = 0f; m[5] = 0f
         var op = alpha
@@ -201,10 +211,11 @@ private fun DrawScope.paintWith(s: LangScene, code: Int, pal: ArtPalette, path: 
  * Scene keys: "lx:es" the 140x140 mark, "lxc:es" the cover crop (viewBox 30 14 84 108), "lxs:es" the Watch banner
  * (viewBox 0 22 140 71, with the ambient layer over it at 85%).
  */
-internal fun isLangKey(key: String) = key.startsWith("lx:") || key.startsWith("lxc:") || key.startsWith("lxs:")
+internal fun isLangKey(key: String) = key.startsWith("lx:") || key.startsWith("lxc:") || key.startsWith("lxs:") || key.startsWith("mc:")
 
 /** viewBox x, y, w, h of a lang key. */
 internal fun langView(key: String): FloatArray = when {
+    key == "lxc:ms" -> floatArrayOf(0f, 14f, 140f, 108f)   // the Malay mark is a wide building: keep its full width in the cover
     key.startsWith("lxc:") -> floatArrayOf(30f, 14f, 84f, 108f)
     key.startsWith("lxs:") -> floatArrayOf(0f, 22f, 140f, 71f)
     else -> floatArrayOf(0f, 0f, 140f, 140f)
@@ -235,9 +246,39 @@ private inline fun DrawScope.cv(box: Size, block: () -> Unit) {
     c.save(); c.clipRect(0f, 0f, box.width, box.height); block(); c.restore()
 }
 
-/** The ambient layer behind a screen, drawn at the current origin in dp space with width [wDp]; the caller fades it out. */
-internal fun DrawScope.paintLangAmbient(lang: String, pal: ArtPalette, clockMs: Float, wDp: Float) {
+/** One cached bitmap of the static nodes of the Malay ambient layer (drawn once, reused every frame). */
+private object AmbientStaticCache {
+    var scene: LangScene? = null
+    var pal: ArtPalette? = null
+    var px: Int = 0
+    var bmp: ImageBitmap? = null
+}
+
+/**
+ * The ambient layer behind a screen, drawn at the current origin in dp space with width [wDp]; the caller fades it out.
+ * [dim] multiplies the whole layer (Malay uses 0.3 in dark mode). For "ms" the static nodes come from a cached bitmap.
+ */
+internal fun DrawScope.paintLangAmbient(lang: String, pal: ArtPalette, clockMs: Float, wDp: Float, dim: Float = 1f) {
     val amb = LangArt.ambient(lang) ?: return
     val k = wDp / 296f
-    withTransform({ scale(k, k, Offset.Zero) }) { drawLangScene(amb, pal, clockMs / 1000f) }
+    withTransform({ scale(k, k, Offset.Zero) }) {
+        if (lang != "ms") {
+            drawLangScene(amb, pal, clockMs / 1000f, dim)
+        } else {
+            val scale = k * density
+            val wPx = (296f * scale).toInt().coerceAtLeast(1)
+            val hPx = (300f * scale).toInt().coerceAtLeast(1)
+            val c = AmbientStaticCache
+            var bmp = c.bmp
+            if (bmp == null || c.scene !== amb || c.pal != pal || c.px != wPx) {
+                val nb = ImageBitmap(wPx, hPx)
+                CanvasDrawScope().draw(this, layoutDirection, Canvas(nb), Size(wPx.toFloat(), hPx.toFloat())) {
+                    withTransform({ scale(wPx / 296f, hPx / 300f, Offset.Zero) }) { drawLangScene(amb, pal, 0f, 1f, 1) }
+                }
+                c.scene = amb; c.pal = pal; c.px = wPx; c.bmp = nb; bmp = nb
+            }
+            drawImage(bmp, dstSize = IntSize(296, 300), alpha = dim)
+            drawLangScene(amb, pal, clockMs / 1000f, dim, 2)
+        }
+    }
 }

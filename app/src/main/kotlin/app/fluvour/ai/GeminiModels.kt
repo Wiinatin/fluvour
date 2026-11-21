@@ -3,6 +3,20 @@ package app.fluvour.ai
 /** One Gemini model the app can use. [short] is what the little label on an entry says. */
 data class GeminiModel(val id: String, val name: String, val short: String, val note: String)
 
+/** Gemini text-to-speech (preview). The answer is raw 16-bit mono sound at [SAMPLE_RATE] Hz. Model names change often: the older one is the fallback. */
+object GeminiTts {
+    const val MODEL = "gemini-3.1-flash-tts-preview"
+    const val FALLBACK = "gemini-2.5-flash-preview-tts"
+    const val SAMPLE_RATE = 24000
+    /** The 30 prebuilt Gemini voices. The first six stay in their old order, so saved choices and the default (Kore) do not change. */
+    val VOICES = listOf(
+        "Kore", "Leda", "Aoede", "Puck", "Charon", "Orus",
+        "Zephyr", "Fenrir", "Callirrhoe", "Autonoe", "Enceladus", "Iapetus", "Umbriel", "Algieba", "Despina", "Erinome",
+        "Algenib", "Rasalgethi", "Laomedeia", "Achernar", "Alnilam", "Schedar", "Gacrux", "Pulcherrima", "Achird",
+        "Zubenelgenubi", "Vindemiatrix", "Sadachbia", "Sadaltager", "Sulafat"
+    )
+}
+
 object GeminiModels {
     /** Strongest first. */
     val ALL = listOf(

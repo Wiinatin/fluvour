@@ -20,6 +20,9 @@ class ExampleRepository @Inject constructor(private val cache: LookupCacheDao, p
         return aiExamples(userId, lang, uiLang, word, meaning)
     }
 
+    /** Real Tatoeba sentences only (no AI fallback), cached on the phone. Used by the word popup's Sentences tab. */
+    suspend fun real(userId: String, lang: String, uiLang: String, word: String): List<QSentence> = tatoeba(userId, lang, uiLang, word)
+
     /** Examples already saved on the phone for this word (no network): lets a word that has a sentence still get new ones over time. */
     suspend fun cached(lang: String, uiLang: String, word: String): List<QSentence> =
         listOf(LookupRepository.hash("ex_tatoeba2", lang, uiLang, word, ""), LookupRepository.hash("ex_ai", lang, uiLang, word, ""))

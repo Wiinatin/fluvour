@@ -101,6 +101,8 @@ object LanguagePalettes {
     private val viD = LanguagePalette(c(0xCB8C9F), c(0x2E2125))   // dark values: an addition, same hue lifted
     private val id = LanguagePalette(c(0x8C5434), c(0xE8D0BA))
     private val idD = LanguagePalette(c(0xBA9885), c(0x2A2017))   // dark values: an addition, same hue lifted
+    private val ms = LanguagePalette(c(0xB30F22), c(0xEFE3C2))    // Sarawak red
+    private val msD = LanguagePalette(c(0xE0787D), c(0x2E1A1B))   // dark values from the approved prototype
     fun of(code: String, dark: Boolean): LanguagePalette = when (code) {
         "zh" -> if (dark) zhD else zh
         "ko" -> if (dark) koD else ko
@@ -109,6 +111,7 @@ object LanguagePalettes {
         "de" -> if (dark) deD else de
         "vi" -> if (dark) viD else vi
         "id" -> if (dark) idD else id
+        "ms" -> if (dark) msD else ms
         "th" -> if (dark) thD else th
         "en" -> if (dark) enD else en
         else -> if (dark) jaD else ja      // ja

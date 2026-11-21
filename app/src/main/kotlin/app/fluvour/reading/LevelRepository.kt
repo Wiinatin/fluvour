@@ -15,6 +15,18 @@ class LevelRepository @Inject constructor(@ApplicationContext private val ctx: C
 
     suspend fun lookup(lang: String, vararg words: String?): LevelInfo? = withContext(Dispatchers.IO) { table(lang)?.find(*words) }
 
+    /** Common words that contain `ch`, most frequent first (words with a frequency rank only). */
+    suspend fun wordsWith(lang: String, ch: Char, limit: Int): List<KanjiWord> = withContext(Dispatchers.IO) { table(lang)?.wordsContaining(ch, limit).orEmpty() }
+
+    /** The whole table for one language (loaded once), for measuring many words at a time. Null when the language has no list. */
+    suspend fun get(lang: String): LevelTable? = withContext(Dispatchers.IO) { table(lang) }
+
+    /** Loads the table ahead of time so [cached] can answer without waiting. */
+    suspend fun warm(lang: String) { withContext(Dispatchers.IO) { table(lang) } }
+
+    /** Instant lookup; null until the table has been loaded (see [warm]). */
+    fun cached(lang: String, vararg words: String?): LevelInfo? = tables[lang]?.find(*words)
+
     private fun table(lang: String): LevelTable? = tables[lang] ?: runCatching {
         ctx.assets.open("levels/$lang.tsv").bufferedReader().useLines { Levels.parse(it) }
     }.getOrNull()?.also { tables[lang] = it }

@@ -2,6 +2,8 @@ import sys, glob, os, json
 sys.path.insert(0, '.')
 from svg2scene import Board, mmul, IDENT
 
+CHUNK = 25   # nodes per generated function (JVM 64 KB method limit; the Malay mark has long paths)
+
 def F(x):
     s = ('%.4f' % x).rstrip('0').rstrip('.')
     if s in ('-0', ''): s = '0'
@@ -70,13 +72,13 @@ def emit_scene(name, w, h, P, out):
           f"floatArrayOf({', '.join(F(s[0]) for s in g['stops'])}), longArrayOf({', '.join(hexl(s[1], s[2]) for s in g['stops'])})),")
     L('            ),')
     L('            colors = longArrayOf(' + ', '.join(hexl(c) for c in P['colors']) + '),')
-    L('            nodes = ' + ' + '.join(f'{name}Nodes{i}()' for i in range((len(P['nodes']) + 59) // 60)) or 'emptyArray()')
+    L('            nodes = ' + (' + '.join(f'{name}Nodes{i}()' for i in range((len(P['nodes']) + CHUNK - 1) // CHUNK)) or 'emptyArray()'))
     L('        )')
     L('    }')
     # chunked node functions
-    for i in range(0, len(P['nodes']), 60):
-        L(f'    private fun {name}Nodes{i//60}() = arrayOf(')
-        for n in P['nodes'][i:i+60]:
+    for i in range(0, len(P['nodes']), CHUNK):
+        L(f'    private fun {name}Nodes{i//CHUNK}() = arrayOf(')
+        for n in P['nodes'][i:i+CHUNK]:
             args = [f'"{n["d"]}"', str(n['c']), str(n['f']), F(n['fa']), str(n['s']), F(n['sa']), F(n['sw']), str(n['cap']), 'true' if n['ev'] else 'false']
             L('        LangNode(' + ', '.join(args) + '),')
         L('    )')
@@ -94,6 +96,18 @@ def main(proj, outdir):
                f'internal object {cls} {{']
         emit_scene('mark', 140, 140, mk, out)
         emit_scene('ambient', 296, 300, am, out)
+        if b.covers:
+            names = []
+            sils = []; views = []
+            for i, el in enumerate(b.covers):
+                cp = pack(b, b.scene_cover(el))
+                emit_scene(f'cover{i}', float(el.get('data-w')), float(el.get('data-h')), cp, out)
+                names.append(f'cover{i}'); sils.append(el.get('data-sil')); views.append([float(x) for x in el.get('viewBox').split()])
+                print('   cover', i, len(cp['nodes']), len(cp['anims']))
+            out.append('    /** Frameless covers: scene, viewBox (x, y, w, h) and the silhouette path the grain is clipped to (scene coordinates). */')
+            out.append('    val covers: Array<LangScene> get() = arrayOf(' + ', '.join(names) + ')')
+            out.append('    val coverViews: Array<FloatArray> = arrayOf(' + ', '.join('floatArrayOf(' + ', '.join(F(x) for x in v) + ')' for v in views) + ')')
+            out.append('    val coverSil: Array<String> = arrayOf(' + ', '.join('"' + d + '"' for d in sils) + ')')
         out.append('}')
         open(f'{outdir}/{cls}.kt', 'w').write('\n'.join(out) + '\n')
         meta[b.code] = dict(inks=b.inks, accent=b.accent, nodes=(len(mk['nodes']), len(am['nodes'])), P=(mk, am))

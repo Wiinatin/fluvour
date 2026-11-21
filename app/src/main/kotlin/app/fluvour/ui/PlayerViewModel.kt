@@ -1,6 +1,9 @@
 package app.fluvour.ui
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -9,15 +12,20 @@ import app.fluvour.audio.TtsManager
 import app.fluvour.data.SettingsRepository
 import app.fluvour.data.SourceDao
 import app.fluvour.data.SourceEntity
+import app.fluvour.data.LikedVideoDao
+import app.fluvour.data.LikedVideoEntity
 import app.fluvour.data.WatchHistoryDao
 import app.fluvour.data.WatchHistoryEntity
 import androidx.media3.common.Player
 import app.fluvour.media.Playable
+import app.fluvour.media.SpeechListener
 import app.fluvour.media.SubLine
 import app.fluvour.media.SpectrumTap
 import app.fluvour.media.VideoHit
 import app.fluvour.media.WaveformExtractor
 import app.fluvour.media.YouTubeSource
+import app.fluvour.reading.DictResult
+import app.fluvour.reading.DictationDiff
 import app.fluvour.reading.DictionaryRepository
 import app.fluvour.reading.ImportedLookup
 import app.fluvour.reading.LevelInfo
@@ -54,12 +62,30 @@ enum class MiniMode { NONE, MINI, AUDIO }
 
 /** How many videos the watch history keeps (the oldest are dropped). */
 private const val HISTORY_CAP = 50
+/** Dictation plays a line from a little before it starts to a little after it ends, so the first and last sounds are not clipped. */
+private const val DICT_LEAD_MS = 400L
+private const val DICT_TAIL_MS = 350L
+
+/** The choices for how many times a loop repeats; 0 = until you stop it. */
+private val REPEAT_STEPS = listOf(0, 2, 3, 5, 10)
 
 /** A-B loop ends in ms. The loop runs only when both are set. */
 data class AbLoop(val a: Long? = null, val b: Long? = null)
 
+/**
+ * Dictation and shadowing share this state (`on`). `index` is the subtitle line being practised, `revealed` is true once the answer was
+ * submitted (dictation) or heard (shadowing) and the grade is shown. `answer` is the typed or recognised text; `result` is its grade
+ * against the real line (null for a moment while it is worked out).
+ * Shadowing only: `shadow` is true, the real line is visible from the start, `listening` is true while the microphone is open,
+ * and `note` is a short message under the mic (nothing heard, no permission, ...).
+ */
+data class DictateUi(
+    val on: Boolean = false, val index: Int = 0, val revealed: Boolean = false, val answer: String = "", val result: DictResult? = null,
+    val shadow: Boolean = false, val listening: Boolean = false, val note: String? = null
+)
+
 /** The tapped word and the subtitle line it sits in. */
-data class VideoLookup(val word: String, val sentence: String, val startMs: Long, val endMs: Long, val lemma: String? = null, val reading: String? = null)
+data class VideoLookup(val word: String, val sentence: String, val startMs: Long, val endMs: Long, val lemma: String? = null, val reading: String? = null, val words: List<app.fluvour.media.SubWord> = emptyList())
 
 /** A subtitle line as one sentence: line breaks inside a cue are joined (no space for Japanese, Chinese and Thai). */
 fun subLineText(l: SubLine, lang: String): String =
@@ -69,11 +95,13 @@ fun subLineText(l: SubLine, lang: String): String =
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    @ApplicationContext ctx: Context, private val settingsRepo: SettingsRepository,
+    @ApplicationContext private val ctx: Context, private val settingsRepo: SettingsRepository,
     private val source: YouTubeSource, private val tts: TtsManager,
     private val sources: SourceDao, private val sentenceRepo: SentenceRepository,
     private val lookups: LookupRepository, private val levelRepo: LevelRepository, private val dictRepo: DictionaryRepository,
-    private val historyDao: WatchHistoryDao
+    private val historyDao: WatchHistoryDao,
+    private val likedDao: LikedVideoDao,
+    private val analyzed: app.fluvour.data.AnalyzedVideoDao
 ) : ViewModel() {
     // Audio focus handled by ExoPlayer: other apps' audio and in-app TTS that asks for focus make it duck or pause; headphone unplug pauses.
     // The wake mode keeps playback alive with the screen off. PlaybackService (media/PlaybackService.kt) shows the media notification.
@@ -120,9 +148,11 @@ class PlayerViewModel @Inject constructor(
     }
 
     /** Called when the Watch tab is left: a playing video goes to the floating window, a paused one is left alone. */
-    fun onLeaveWatch() { _mini.value = if (_ui.value.item != null && player.playWhenReady && player.playbackState != Player.STATE_ENDED) MiniMode.MINI else MiniMode.NONE }
+    fun onLeaveWatch() { onWatch = false; _mini.value = if (_ui.value.item != null && player.playWhenReady && player.playbackState != Player.STATE_ENDED) MiniMode.MINI else MiniMode.NONE }
     /** Called when the Watch tab is shown: the full player takes over, the window and audio-only state are cleared. */
-    fun onEnterWatch() { _mini.value = MiniMode.NONE }
+    fun onEnterWatch() { onWatch = true; _mini.value = MiniMode.NONE }
+    /** True while the landscape full-screen Watch screen is showing: Root hides the bottom tab bar then. */
+    val immersive = MutableStateFlow(false)
     /** The window's X: pause, remember the place, hide. The video stays loaded on the Watch page. */
     fun closeMini() { player.pause(); saveProgress(); _mini.value = MiniMode.NONE }
     /** Hide the window but keep the sound going (the notification, or the Watch page, can stop it). */
@@ -147,6 +177,18 @@ class PlayerViewModel @Inject constructor(
     val speed: StateFlow<Float> = _speed.asStateFlow()
     private val _loop = MutableStateFlow(AbLoop())
     val loop: StateFlow<AbLoop> = _loop.asStateFlow()
+    // How many times a loop repeats (0 = until you stop it) and the pause between repeats; both are remembered.
+    private val loopPrefs = ctx.getSharedPreferences("watch", Context.MODE_PRIVATE)
+    private val _repeats = MutableStateFlow(loopPrefs.getInt("loop_repeats", 0))
+    val repeats: StateFlow<Int> = _repeats.asStateFlow()
+    private val _gapMode = MutableStateFlow(loopPrefs.getInt("loop_gap", 0))
+    /** 0 = no pause, 1 = 1 second, 2 = 2 seconds, 3 = as long as the line, so you can say it back. */
+    val gapMode: StateFlow<Int> = _gapMode.asStateFlow()
+    private val _pass = MutableStateFlow(0)
+    /** Plays of the current loop that are already finished. */
+    val pass: StateFlow<Int> = _pass.asStateFlow()
+    fun cycleRepeats() { val n = REPEAT_STEPS[(REPEAT_STEPS.indexOf(_repeats.value) + 1) % REPEAT_STEPS.size]; _repeats.value = n; loopPrefs.edit().putInt("loop_repeats", n).apply() }
+    fun cycleGap() { val n = (_gapMode.value + 1) % 4; _gapMode.value = n; loopPrefs.edit().putInt("loop_gap", n).apply() }
 
     // ---- Audio-only mode and waveform ----
     private val _audioOnly = MutableStateFlow(false)
@@ -195,23 +237,172 @@ class PlayerViewModel @Inject constructor(
             while (true) {
                 delay(40)
                 val l = _loop.value
-                if (l.a != null && l.b != null && player.isPlaying && player.currentPosition >= l.b) player.seekTo(l.a)
+                val a = l.a; val b = l.b
+                if (a != null && b != null && player.isPlaying && player.currentPosition >= b) {
+                    val done = _pass.value + 1
+                    val max = _repeats.value
+                    if (max > 0 && done >= max) { clearLoop() }   // enough repeats: keep playing past the end
+                    else {
+                        _pass.value = done
+                        val gap = when (_gapMode.value) { 1 -> 1000L; 2 -> 2000L; 3 -> ((b - a) / player.playbackParameters.speed).toLong(); else -> 0L }
+                        if (gap > 0) {
+                            player.pause(); delay(gap)
+                            if (_loop.value != l) continue   // stopped or changed during the pause
+                            player.seekTo(a); player.play()
+                        } else player.seekTo(a)
+                    }
+                }
             }
         }
     }
 
     /** Pitch stays natural at any speed. The speed is kept when you open another video. */
     fun setSpeed(s: Float) { _speed.value = s; player.setPlaybackSpeed(s) }
-    fun markA() { val p = player.currentPosition; _loop.value = AbLoop(p, _loop.value.b?.takeIf { it > p + 300 }) }
-    fun markB() { val a = _loop.value.a ?: return; val p = player.currentPosition; if (p > a + 300) _loop.value = AbLoop(a, p) }
+    /** Skip 10 s back (-1) or forward (1); stops at 0:00 and at the end. */
+    fun skipBy(dir: Int) {
+        val d = player.duration.takeIf { it > 0 && it != androidx.media3.common.C.TIME_UNSET } ?: 0L
+        player.seekTo(app.fluvour.ui.screens.SkipMath.target(player.currentPosition, d, dir))
+    }
+    private var boosting = false
+    /** Hold-for-2x: only the player speeds up. The chosen speed (`speed`) is untouched, and comes back when this is switched off. */
+    fun boost(on: Boolean) { if (on == boosting) return; boosting = on; player.setPlaybackSpeed(if (on) 2f else _speed.value) }
+    fun markA() { val p = player.currentPosition; _pass.value = 0; _loop.value = AbLoop(p, _loop.value.b?.takeIf { it > p + 300 }) }
+    fun markB() { val a = _loop.value.a ?: return; val p = player.currentPosition; if (p > a + 300) { _pass.value = 0; _loop.value = AbLoop(a, p) } }
     /** Loop one subtitle line: A and B at its start and end, and start playing from A. */
-    fun loopLine(line: SubLine) { _loop.value = AbLoop(line.startMs, line.endMs); player.seekTo(line.startMs); player.play() }
-    fun clearLoop() { _loop.value = AbLoop() }
+    fun loopLine(line: SubLine) { _pass.value = 0; _loop.value = AbLoop(line.startMs, line.endMs); player.seekTo(line.startMs); player.play() }
+    fun clearLoop() { _pass.value = 0; _loop.value = AbLoop() }
+
+    // ---- Dictation: hear one line, type it, then see the real subtitle ----
+    private val _dictate = MutableStateFlow(DictateUi())
+    val dictate: StateFlow<DictateUi> = _dictate.asStateFlow()
+    private var dictStop: androidx.media3.exoplayer.PlayerMessage? = null
+    private var speech: SpeechListener? = null
+
+    /** Long-press on play: starts dictation at the line playing now, or leaves it. */
+    fun toggleDictation(posMs: Long) {
+        if (_dictate.value.on) { exitDictation(); return }
+        val lines = _ui.value.item?.lines ?: return
+        if (lines.isEmpty()) return
+        clearLoop()
+        // starts in the mode used last time
+        _dictate.value = DictateUi(on = true, index = lines.indexOfLast { it.startMs <= posMs }.coerceAtLeast(0), shadow = loopPrefs.getBoolean("practice_shadow", false))
+        playDictLine()
+    }
+    fun exitDictation() { dictStop?.cancel(); dictStop = null; stopListening(); _dictate.value = DictateUi(); player.pause() }
+
+    /** The Dictation / Shadowing switch in the practice header: same line, other mode. */
+    fun setShadow(on: Boolean) {
+        val d = _dictate.value
+        if (!d.on || d.shadow == on) return
+        loopPrefs.edit().putBoolean("practice_shadow", on).apply()
+        stopListening()
+        _dictate.value = DictateUi(on = true, index = d.index, shadow = on)
+        playDictLine()
+    }
+
+    /** Plays the current dictation line once, then pauses by itself at its end. Also used for "hear it again". */
+    fun playDictLine() {
+        val d = _dictate.value
+        if (!d.on) return
+        val line = _ui.value.item?.lines?.getOrNull(d.index) ?: return
+        dictStop?.cancel()
+        stopListening()
+        _dictate.update { it.copy(note = null) }
+        player.seekTo((line.startMs - DICT_LEAD_MS).coerceAtLeast(0L))
+        // at the end of the line: pause; when shadowing, open the microphone for your turn
+        dictStop = player.createMessage { _, _ -> player.pause(); if (_dictate.value.shadow) listenSoon(d.index) }
+            .setLooper(player.applicationLooper).setPosition(line.endMs + DICT_TAIL_MS).setDeleteAfterDelivery(true).also { it.send() }
+        player.play()
+    }
+    /** Submit: show the real subtitle at once, then the grade (missed words, wrong guesses) as soon as it is worked out. */
+    fun dictReveal(answer: String) {
+        dictStop?.cancel(); dictStop = null; player.pause()
+        val d = _dictate.value
+        if (!d.on) return
+        val idx = d.index
+        val line = _ui.value.item?.lines?.getOrNull(idx) ?: return
+        val refTokens = _ui.value.tokens.getOrNull(idx).orEmpty()
+        _dictate.update { it.copy(revealed = true, answer = answer, result = null) }
+        viewModelScope.launch {
+            val r = withContext(Dispatchers.Default) {
+                DictationDiff.grade(line.text, refTokens.ifEmpty { WordSplitter.split(line.text, lang) }, answer, lang)
+            }
+            _dictate.update { if (it.on && it.index == idx && it.revealed) it.copy(result = r) else it }
+        }
+    }
+    fun dictRetry() { stopListening(); _dictate.update { it.copy(revealed = false, result = null, note = null) }; playDictLine() }
+    fun dictNext() {
+        val n = _ui.value.item?.lines?.size ?: return
+        val d = _dictate.value
+        if (d.on && d.index + 1 < n) { stopListening(); _dictate.value = DictateUi(on = true, index = d.index + 1, shadow = d.shadow); playDictLine() }
+    }
+
+    // ---- Shadowing: hear the line, say it back, see how many words the phone understood ----
+    /** A moment after the line ends, so the speaker's last sound does not reach the microphone. */
+    private fun listenSoon(idx: Int) {
+        viewModelScope.launch {
+            delay(250)
+            val d = _dictate.value
+            if (d.on && d.shadow && !d.revealed && !d.listening && d.index == idx) shadowListen()
+        }
+    }
+
+    /** Opens the microphone for one phrase. The screen asks for the permission first when the mic is tapped. */
+    fun shadowListen() {
+        val d = _dictate.value
+        if (!d.on || !d.shadow || d.revealed || d.listening) return
+        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            _dictate.update { it.copy(note = "Tap the mic to allow it.") }; return
+        }
+        val s = speech ?: SpeechListener(ctx).also { speech = it }
+        if (!s.available()) { _dictate.update { it.copy(note = "This phone has no speech recognition.") }; return }
+        player.pause()
+        val idx = d.index
+        _dictate.update { it.copy(listening = true, note = null) }
+        s.start(lang) { out ->
+            val cur = _dictate.value
+            if (!cur.on || cur.index != idx || cur.revealed) return@start
+            when (out) {
+                is SpeechListener.Out.Text -> { _dictate.update { it.copy(listening = false) }; dictReveal(out.text) }
+                is SpeechListener.Out.Fail -> _dictate.update { it.copy(listening = false, note = speechNote(out.code)) }
+            }
+        }
+    }
+    /** Tap the mic while it is open: stop listening now (what was heard so far is still graded). */
+    fun shadowStop() { speech?.stop() }
+    private fun stopListening() { speech?.cancel(); _dictate.update { if (it.listening) it.copy(listening = false) else it } }
+    private fun speechNote(code: Int) = when (code) {
+        6, 7 -> "Did not hear you. Tap the mic to try again."
+        9 -> "Tap the mic to allow it."
+        8 -> "Speech recognition is busy. Tap the mic to try again."
+        12, 13 -> "This phone's speech recognition does not have this language yet."
+        1, 2, 4 -> "Speech recognition needs a connection, or an offline language pack."
+        else -> "Speech recognition did not work (code $code). Tap the mic to try again."
+    }
 
     // ---- Watch history (links and details only, never the video) ----
-    /** Latest first, capped at HISTORY_CAP rows. */
-    val history: StateFlow<List<WatchHistoryEntity>> = historyDao.observe(HISTORY_CAP).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    /** Latest first, capped at HISTORY_CAP rows, of the language being learned only: switching language switches the list. */
+    val history: StateFlow<List<WatchHistoryEntity>> = settingsRepo.settings.map { it.targetLang }.distinctUntilChanged()
+        .flatMapLatest { historyDao.observe(it, HISTORY_CAP) }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    init { viewModelScope.launch { historyDao.claimUnassigned(settingsRepo.settings.first().targetLang) } }
     private var resumed = false
+    private var onWatch = false   // the Watch tab is showing
+    private var openJob: Job? = null
+    private var activeLang: String? = null
+    // Switching the learning language: save the video's place under the old language and close it; Watch then shows the list.
+    init {
+        viewModelScope.launch {
+            settingsRepo.settings.map { it.targetLang }.distinctUntilChanged().collect { l ->
+                val prev = activeLang; activeLang = l
+                if (prev == null || prev == l) return@collect
+                openJob?.cancel(); openJob = null
+                saveProgress(); exitDictation(); backToLink()
+                lang = l
+                _mini.value = MiniMode.NONE
+                // Watch shows the Recent / Liked list for the new language; the last video is not opened by itself
+            }
+        }
+    }
 
     // ---- Search bar: a pasted link opens the video, anything else is searched on YouTube ----
     private val _search = MutableStateFlow(SearchUi())
@@ -228,7 +419,7 @@ class PlayerViewModel @Inject constructor(
         searchJob?.cancel()
         _search.value = SearchUi(loading = true)
         searchJob = viewModelScope.launch {
-            source.search(t).fold(
+            withContext(app.fluvour.media.YouTubeGuard.UserRequest()) { source.search(t) }.fold(
                 onSuccess = { _search.value = SearchUi(hits = it) },
                 onFailure = { _search.value = SearchUi(error = "Search did not work: ${it.message ?: it.javaClass.simpleName}") }
             )
@@ -249,12 +440,35 @@ class PlayerViewModel @Inject constructor(
 
     fun removeHistory(id: String) { viewModelScope.launch { historyDao.delete(id) } }
 
+    // ---- Liked videos: the heart in the player. Kept apart from history, so clearing Recent never removes a liked video. ----
+    /** Newest liked first, of the language being learned only. */
+    val liked: StateFlow<List<LikedVideoEntity>> = settingsRepo.settings.map { it.targetLang }.distinctUntilChanged()
+        .flatMapLatest { likedDao.observe(it) }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    /** True while the loaded video is in the Liked list. */
+    val currentLiked: StateFlow<Boolean> = combine(_ui, liked) { u, l -> u.item?.let { i -> l.any { it.id == videoId(i.sourceUrl) } } ?: false }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    fun toggleLike() {
+        val item = _ui.value.item ?: return
+        val id = videoId(item.sourceUrl)
+        val dur = player.duration.takeIf { it > 0 } ?: item.durationMs
+        viewModelScope.launch {
+            if (liked.value.any { it.id == id }) likedDao.delete(id)
+            else likedDao.upsert(LikedVideoEntity(id, item.sourceUrl, item.title, item.uploader, item.thumbUrl ?: historyDao.get(id)?.thumbUrl, dur, System.currentTimeMillis(), lang))
+        }
+    }
+    fun unlike(id: String) { viewModelScope.launch { likedDao.delete(id) } }
+
     /** First visit to the Watch tab after the app starts: load the last video at its saved place, paused and ready to play. */
     fun resumeLast() {
         val u = _ui.value
         if (resumed || u.item != null || u.loading) return
         resumed = true
-        viewModelScope.launch { val last = historyDao.latest() ?: return@launch; open(last.url, last.positionMs, autoplay = false) }
+        viewModelScope.launch {
+            val l = settingsRepo.settings.first().targetLang
+            historyDao.claimUnassigned(l)   // rows from before per-language history
+            val last = historyDao.latest(l) ?: return@launch
+            open(last.url, last.positionMs, autoplay = false)
+        }
     }
 
     /** `startMs` null means "where you stopped last time" (from the history), or the beginning for a new video. */
@@ -265,10 +479,11 @@ class PlayerViewModel @Inject constructor(
         if (now.loading) return
         if (now.item?.sourceUrl == url) { if (autoplay) player.play(); return }   // already loaded: carry on where it is
         saveProgress(); player.pause()
-        _ui.value = PlayerUi(loading = true); clearLoop(); waveJob?.cancel(); _wave.value = null
-        viewModelScope.launch {
-            lang = settingsRepo.settings.first().targetLang
-            source.load(url, lang).fold(
+        _ui.value = PlayerUi(loading = true); clearLoop(); waveJob?.cancel(); _wave.value = null; dictStop?.cancel(); dictStop = null; stopListening(); _dictate.value = DictateUi()
+        openJob = viewModelScope.launch {
+            val st = settingsRepo.settings.first()
+            lang = st.targetLang
+            withContext(app.fluvour.media.YouTubeGuard.UserRequest()) { source.load(url, lang, st.uiLang) }.fold(
                 onSuccess = { item ->
                     val id = videoId(item.sourceUrl)
                     val saved = historyDao.get(id)
@@ -284,14 +499,34 @@ class PlayerViewModel @Inject constructor(
                         }
                     }
                     val sid = saveSource(item)
-                    historyDao.upsert(WatchHistoryEntity(id, item.sourceUrl, item.title, item.uploader, item.thumbUrl ?: saved?.thumbUrl, dur, start, System.currentTimeMillis()))
-                    historyDao.trim(HISTORY_CAP)
+                    historyDao.upsert(WatchHistoryEntity(id, item.sourceUrl, item.title, item.uploader, item.thumbUrl ?: saved?.thumbUrl, dur, start, System.currentTimeMillis(), lang))
+                    historyDao.trim(lang, HISTORY_CAP)
                     _ui.value = PlayerUi(item = item, sourceId = sid)
-                    // Split every line into words off the main thread (Kuromoji / jieba can take a moment the first time).
-                    val tokens = withContext(Dispatchers.Default) { item.lines.map { WordSplitter.split(it.text, lang) } }
-                    _ui.update { if (it.item === item) it.copy(tokens = tokens) else it }
+                    // Split the lines into words off the main thread (Kuromoji / jieba can take a moment the first time). The lines around where
+                    // playback starts go first and the list is published after every chunk, so furigana, colours and the word fill are ready within
+                    // moments; a long video used to wait for every line before showing any.
+                    val lines = item.lines
+                    val first = lines.indexOfLast { it.startMs <= start }.coerceAtLeast(0)
+                    val order = (first until lines.size).toList() + (0 until first).toList()
+                    val done = arrayOfNulls<List<Token>>(lines.size)
+                    var at = 0
+                    var chunk = 25
+                    while (at < order.size) {
+                        if (_ui.value.item !== item) break   // another video was opened meanwhile
+                        val ids = order.subList(at, minOf(at + chunk, order.size))
+                        val part = withContext(Dispatchers.Default) { ids.map { it to WordSplitter.split(lines[it].text, lang) } }
+                        for ((i, t) in part) done[i] = t
+                        val snapshot = done.map { it ?: emptyList() }
+                        _ui.update { if (it.item === item) it.copy(tokens = snapshot) else it }
+                        at += ids.size
+                        chunk = 150
+                    }
                 },
-                onFailure = { _ui.value = PlayerUi(error = "Could not open this video: ${it.message ?: it.javaClass.simpleName}") }
+                onFailure = {
+                    _ui.value = PlayerUi(error = if (app.fluvour.media.YouTubeGuard.isBlock(it) && it !is app.fluvour.media.YouTubeCooldownException) "YouTube is asking for a bot check on this connection. Fluvour will pause YouTube requests for a while. Try switching between Wi-Fi and mobile data." else "Could not open this video: ${it.message ?: it.javaClass.simpleName}")
+                    // A clip from the list that is gone (not a network error) stops being recommended.
+                    if (app.fluvour.reading.ClipPlan.isGone(it)) viewModelScope.launch { runCatching { analyzed.markUnavailable(url) } }
+                }
             )
         }
     }
@@ -331,7 +566,7 @@ class PlayerViewModel @Inject constructor(
     fun select(line: SubLine, word: String, lemma: String?, reading: String?) {
         job?.cancel()
         val sentence = subLineText(line, lang)
-        _lookup.value = VideoLookup(word, sentence, line.startMs, line.endMs, lemma, reading)
+        _lookup.value = VideoLookup(word, sentence, line.startMs, line.endMs, lemma, reading, line.words)
         _meanings.value = Meanings(); _level.value = null; _imported.value = null
         job = viewModelScope.launch {
             val s = settingsRepo.settings.first()
@@ -346,17 +581,17 @@ class PlayerViewModel @Inject constructor(
 
     // ---- Mining ----
 
-    private suspend fun mine(text: String, startMs: Long, endMs: Long): String? {
+    private suspend fun mine(text: String, startMs: Long, endMs: Long, words: List<app.fluvour.media.SubWord> = emptyList()): String? {
         val sid = _ui.value.sourceId ?: return null
         if (text.isBlank()) return null
-        return sentenceRepo.mine(settingsRepo.ensureUserId(), lang, text, sid, SentenceRepository.videoPosition(startMs, endMs))
+        return sentenceRepo.mine(settingsRepo.ensureUserId(), lang, text, sid, SentenceRepository.videoPosition(startMs, endMs, words))
     }
 
     /** "Mine this line": saves the subtitle line with this video as its source and the line's time. */
-    fun mineLine(line: SubLine) { viewModelScope.launch { mine(subLineText(line, lang), line.startMs, line.endMs) } }
+    fun mineLine(line: SubLine) { viewModelScope.launch { mine(subLineText(line, lang), line.startMs, line.endMs, line.words) } }
 
     /** The sheet's "Save sentence": the same, for the line the tapped word is in. */
-    fun saveSentence() { val l = _lookup.value ?: return; viewModelScope.launch { mine(l.sentence, l.startMs, l.endMs) } }
+    fun saveSentence() { val l = _lookup.value ?: return; viewModelScope.launch { mine(l.sentence, l.startMs, l.endMs, l.words) } }
 
     /** Save the sentence, then hand its id to the card editor so the card links to it. */
     fun mineForCard(onReady: (sentenceId: String?) -> Unit) {
@@ -366,5 +601,5 @@ class PlayerViewModel @Inject constructor(
 
     fun speak(text: String) { _voiceHint.value = tts.speak(text, lang) == TtsManager.Result.NO_VOICE }
     fun backToLink() { clear(); clearLoop(); waveJob?.cancel(); _wave.value = null; player.stop(); player.clearMediaItems(); _ui.value = PlayerUi() }
-    override fun onCleared() { app.fluvour.media.PlaybackHolder.player = null; tap.release(); player.release(); tts.stop() }
+    override fun onCleared() { speech?.cancel(); app.fluvour.media.PlaybackHolder.player = null; tap.release(); player.release(); tts.stop() }
 }

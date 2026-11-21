@@ -18,6 +18,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,7 +33,7 @@ import app.fluvour.ui.theme.Fluvour
  * Tap or drag anywhere to seek by time; the thin playhead line shows where you are. The A-B loop is shaded.
  */
 @Composable
-fun SpectrumScrubber(vm: PlayerViewModel, pos: Long, dur: Long, loop: AbLoop, onSeek: (Long) -> Unit) {
+fun SpectrumScrubber(vm: PlayerViewModel, pos: Long, dur: Long, loop: AbLoop, height: Dp = 76.dp, onSeek: (Long) -> Unit) {
     val c = Fluvour.colors
     val ctx = LocalContext.current
     val wave by vm.wave.collectAsStateWithLifecycle()
@@ -49,7 +50,7 @@ fun SpectrumScrubber(vm: PlayerViewModel, pos: Long, dur: Long, loop: AbLoop, on
     val frac = if (dur > 0) (pos.toFloat() / dur).coerceIn(0f, 1f) else 0f
     val a = loop.a; val b = loop.b
     Canvas(
-        Modifier.fillMaxWidth().padding(horizontal = 22.dp).height(76.dp)
+        Modifier.fillMaxWidth().padding(horizontal = 22.dp).height(height)
             .pointerInput(dur) { detectTapGestures { o -> if (dur > 0) onSeek((o.x / size.width * dur).toLong().coerceIn(0L, dur)) } }
             .pointerInput(dur) { detectHorizontalDragGestures { change, _ -> if (dur > 0) onSeek((change.position.x / size.width * dur).toLong().coerceIn(0L, dur)) } }
     ) {

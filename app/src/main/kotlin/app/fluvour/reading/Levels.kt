@@ -1,5 +1,6 @@
 package app.fluvour.reading
 
+import app.fluvour.srs.plainArabic
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -15,11 +16,18 @@ data class LevelInfo(val rank: Int?, val code: String?)
 class LevelTable(private val map: Map<String, LevelInfo>) {
     val size: Int get() = map.size
 
+    /** Words of two or more characters containing `ch` that have a frequency rank, most frequent first. */
+    fun wordsContaining(ch: Char, limit: Int): List<KanjiWord> =
+        map.entries.asSequence().filter { it.key.length >= 2 && it.value.rank != null && ch in it.key }
+            .sortedBy { it.value.rank }.take(limit).map { KanjiWord(it.key, it.value.code, it.value.rank) }.toList()
+
     /** Tries each candidate in order (dictionary form first, then the surface form); level and rank may come from different candidates. */
     fun find(vararg candidates: String?): LevelInfo? {
         var rank: Int? = null; var code: String? = null
         for (c in candidates) {
-            val hit = map[c?.trim()?.lowercase() ?: continue] ?: continue
+            val key = c?.trim()?.lowercase() ?: continue
+            // Arabic table keys have no vowel marks (the Quran list is stored plain); other languages are unchanged by plainArabic
+            val hit = map[key] ?: map[plainArabic(key)] ?: continue
             if (rank == null) rank = hit.rank
             if (code == null) code = hit.code
         }
@@ -61,5 +69,8 @@ object Levels {
 
     /** Chips for the popup: exam level first, then frequency. */
     fun chips(lang: String, info: LevelInfo?): List<String> =
-        listOfNotNull(levelLabel(lang, info?.code), rankLabel(info?.rank))
+        listOfNotNull(levelLabel(lang, info?.code), if (lang == "ar") quranRankLabel(info?.rank) else rankLabel(info?.rank))
+
+    /** Arabic: the rank is the word's frequency in the Quran (1 = most common), not subtitle frequency. */
+    fun quranRankLabel(rank: Int?): String? = rank?.let { "Quran freq #" + NumberFormat.getIntegerInstance(Locale.US).format(it) }
 }

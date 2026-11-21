@@ -54,6 +54,7 @@ class OcrEngine @Inject constructor(private val ai: AiService, private val auth:
     }
 
     suspend fun recognize(bitmap: Bitmap, lang: String, allowAi: Boolean): OcrOutcome {
+        if (!Languages.byCode(lang).ocr) return OcrOutcome.Failed("Screen lookup is not available for ${Languages.byCode(lang).name}.")
         val rec = recognizer(lang)
         var mlMessage: String? = null
         if (rec != null) {

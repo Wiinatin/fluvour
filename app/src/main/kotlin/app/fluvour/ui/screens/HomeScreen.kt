@@ -114,7 +114,7 @@ fun HomeScreen(vm: AppViewModel, onGoTab: (String) -> Unit, onSettings: () -> Un
 
     when (sheet) {
         HomeSheet.Language -> LanguageSheet(lang, onPick = { vm.setTarget(it); sheet = HomeSheet.None }, onClose = { sheet = HomeSheet.None })
-        HomeSheet.Profile -> ProfileSheet(wordsKnown = cards.size, stats = stats, lang = lang,
+        HomeSheet.Profile -> ProfileSheet(wordsKnown = cards.size, stats = stats, lang = lang, level = s?.levels?.get(lang), onLevel = { vm.setLevel(lang, it) },
             onSettings = { sheet = HomeSheet.None; onSettings() }, onProgress = { sheet = HomeSheet.None; onProgress() }, onClose = { sheet = HomeSheet.None })
         HomeSheet.None -> {}
     }

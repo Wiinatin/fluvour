@@ -76,9 +76,11 @@ class RotatingClient(
      *
      * A key is stamped as "hit a limit" only with proof: it got a quota error on EVERY model this call could use, so a
      * quota that belongs to one model (for example Gemini's strongest model being used up) never marks a key that still
-     * works on the next model. Stamps are written once at the end, so a key that answered is never stamped.
+     * works on the next model. Stamps are written once at the end, so a key that answered is never stamped, and a stamped key that answers
+     * loses its stamp. With [stamp] false (voice requests: their models have a much smaller quota than text, so a quota error there says
+     * nothing about the key) no key is stamped or cleared.
      */
-    suspend fun generate(models: List<String>, request: (model: String) -> Pair<String, String>): GeminiResult {
+    suspend fun generate(models: List<String>, stamp: Boolean = true, request: (model: String) -> Pair<String, String>): GeminiResult {
         val keys = pool.orderedKeys()
         if (keys.isEmpty()) return GeminiResult.Failure(AiError.NO_KEYS, "No $label key yet. Add one in Settings > AI keys.")
         val chain = order(models.distinct())
@@ -90,6 +92,7 @@ class RotatingClient(
         val quotaOn = HashMap<String, MutableSet<String>>() // key id -> models where that key got a quota error
 
         suspend fun stampProven() {
+            if (!stamp) return
             for ((id, ms) in quotaOn) if (ms.size >= chain.size) pool.markLimited(id)
         }
 
@@ -105,6 +108,7 @@ class RotatingClient(
                     return GeminiResult.Failure(AiError.OFFLINE, "Could not reach $label: ${e.message ?: "no connection"}")
                 }
                 if (result.status in 200..299) {
+                    if (stamp && entry.limitedAt != null) pool.clearLimit(entry.id)   // it answered, so it is not limited now
                     stampProven()
                     return GeminiResult.Success(result.body, m)
                 }

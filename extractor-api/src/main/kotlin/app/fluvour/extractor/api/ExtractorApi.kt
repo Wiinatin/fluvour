@@ -10,7 +10,7 @@ package app.fluvour.extractor.api
  * The app refuses plugins built for another version, and the release workflow publishes per version.
  */
 object ExtractorApi {
-    const val VERSION = 2
+    const val VERSION = 3   // 3: ExtractedMedia.related (watch-next videos)
 }
 
 class HttpRequest(val method: String, val url: String, val headers: Map<String, List<String>>, val body: ByteArray?)
@@ -26,7 +26,9 @@ class Thumbnail(val url: String, val height: Int)
 class ExtractedMedia(
     val title: String, val uploader: String?,
     val videoStreams: List<VideoStream>, val audioStreams: List<AudioStream>, val subtitles: List<SubtitleTrack>,
-    val durationSeconds: Long, val thumbnails: List<Thumbnail>
+    val durationSeconds: Long, val thumbnails: List<Thumbnail>,
+    /** The videos YouTube lists next to this one, for the clip library. Empty when YouTube gives none. */
+    val related: List<SearchHit> = emptyList()
 )
 class SearchHit(val url: String, val title: String, val uploader: String?, val durationSeconds: Long, val thumbnails: List<Thumbnail>)
 

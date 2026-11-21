@@ -30,7 +30,8 @@ class ImportRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val db: AppDatabase, private val articles: ArticleDao, private val sources: SourceDao
 ) {
-    data class Imported(val sourceId: String, val firstArticleId: String, val title: String, val chapters: Int)
+    /** `author` and `cover` (picture bytes read from an EPUB file, when it has one) are used to give the book a library row. */
+    data class Imported(val sourceId: String, val firstArticleId: String, val title: String, val chapters: Int, val author: String? = null, val cover: ByteArray? = null)
 
     suspend fun importText(userId: String, lang: String, raw: String): Result<Imported> =
         attempt { save(userId, lang, TextImport.fromText(raw, null), "paste") }
@@ -42,12 +43,19 @@ class ImportRepository @Inject constructor(
         when (ext) {
             "epub" -> {
                 val book = context.contentResolver.openInputStream(uri)?.use { EpubReader.read(it, base) } ?: throw ImportException("Could not open the file.")
-                save(userId, lang, book, "epub")
+                val saved = save(userId, lang, book, "epub")
+                saved.copy(cover = EpubCover.find { context.contentResolver.openInputStream(uri) ?: throw ImportException("Could not open the file.") })
             }
             "txt", "text", "md", "markdown" -> save(userId, lang, TextImport.fromText(TextImport.decode(readBytes(uri), lang), base), "txt")
             "html", "htm", "xhtml" -> save(userId, lang, TextImport.fromHtml(TextImport.decode(readBytes(uri), lang), base), "html")
             else -> throw ImportException("This file type is not supported yet. Use .epub, .txt or .html.")
         }
+    }
+
+    /** A downloaded catalog EPUB (already in memory). `fallbackTitle` is used when the file has no title of its own. */
+    suspend fun importEpubBytes(userId: String, lang: String, bytes: ByteArray, fallbackTitle: String): Result<Imported> = attempt {
+        val book = java.io.ByteArrayInputStream(bytes).use { EpubReader.read(it, fallbackTitle) }
+        save(userId, lang, book, "epub")
     }
 
     private suspend fun attempt(block: suspend () -> Imported): Result<Imported> = withContext(Dispatchers.IO) {
@@ -73,7 +81,7 @@ class ImportRepository @Inject constructor(
             sources.upsert(SourceEntity(sourceId, userId, SOURCE_KIND, book.title, null, meta, now, now))
             articles.upsertAll(rows)
         }
-        return Imported(sourceId, rows.first().id, book.title, rows.size)
+        return Imported(sourceId, rows.first().id, book.title, rows.size, book.author)
     }
 
     private fun displayName(uri: Uri): String? =

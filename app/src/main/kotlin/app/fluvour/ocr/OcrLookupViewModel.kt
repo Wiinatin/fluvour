@@ -156,7 +156,9 @@ class OcrLookupViewModel @Inject constructor(
             val meaning = m.explanation?.text
                 ?: _imported.value?.entries?.firstOrNull()?.glossary?.lineSequence()?.take(3)?.joinToString("; ")
                 ?: m.dictionary?.text?.lineSequence()?.firstOrNull { it.isNotBlank() }.orEmpty()
-            val card = cardRepo.save(userId, lang, null, (p.lemma ?: p.word).trim(), meaning.trim(), p.sentence, null, sentenceId)
+            val f = app.fluvour.reading.LookupFields.parse(m.explanation?.text)
+            val card = cardRepo.save(userId, lang, null, (f?.word ?: p.lemma ?: p.word).trim(), meaning.trim(), p.sentence, null, sentenceId,
+                f?.variantWord, f?.variantExample, f?.root, f?.lemma)
             _cardAdded.value = true
             // A picture in the background, like cards made in the reader. Own scope: the sheet may close before the picture is ready.
             appScope.launch { runCatching { images.generate(card.id) } }

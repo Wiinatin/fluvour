@@ -27,7 +27,7 @@ data class Part(val text: String? = null, val message: String? = null)
 class LookupRepository @Inject constructor(private val cache: LookupCacheDao, private val auth: AuthRepository, private val ai: AiService) {
 
     suspend fun dictionary(userId: String, lang: String, word: String): Part {
-        val key = hash("dict", lang, "", word, "")
+        val key = hash("dict2", lang, "", word, "")
         cache.get(key)?.let { return Part(it.text) }
         return DictionaryClient.lookup(lang, word).fold(
             onSuccess = { text ->
@@ -39,13 +39,13 @@ class LookupRepository @Inject constructor(private val cache: LookupCacheDao, pr
     }
 
     suspend fun explain(userId: String, lang: String, uiLang: String, word: String, sentence: String): Part {
-        val key = hash("ai", lang, uiLang, word, sentence)
+        val key = hash("ai2", lang, uiLang, word, sentence)
         cache.get(key)?.let { return Part(it.text) }
         val request = JSONObject()
             .put("contents", JSONArray().put(JSONObject().put("parts", JSONArray().put(JSONObject().put("text", prompt(lang, uiLang, word, sentence))))))
-            .put("generationConfig", JSONObject().put("temperature", 0.3).put("maxOutputTokens", 700))
+            .put("generationConfig", JSONObject().put("temperature", 0.3).put("maxOutputTokens", EXPLAIN_TOKENS))
         if (ai.hasTextKeys()) {
-            val r = ai.text(prompt(lang, uiLang, word, sentence))
+            val r = ai.text(prompt(lang, uiLang, word, sentence), maxTokens = EXPLAIN_TOKENS)
             val text = r.text ?: return Part(message = r.message)
             save(key, userId, "ai", lang, word, text)
             return Part(text)
@@ -68,14 +68,20 @@ class LookupRepository @Inject constructor(private val cache: LookupCacheDao, pr
         cache.put(LookupCacheEntity(key, userId, kind, lang, word, text, System.currentTimeMillis()))
 
     companion object {
+        // Newer Gemini models "think" before answering and the thinking counts against this limit. 700 was often used up
+        // before any answer text came out, which left this section empty.
+        internal const val EXPLAIN_TOKENS = 3000
+
         internal fun prompt(lang: String, uiLang: String, word: String, sentence: String): String {
-            val target = Languages.byCode(lang).name
+            val target = Languages.byCode(lang).aiName
             val ui = Languages.byCode(uiLang).name
+            if (lang == "ms") return LookupFields.malayPrompt(target, ui, word, sentence)
+            if (lang == "ar") return LookupFields.arabicPrompt(target, ui, word, sentence)
             return "You help a learner of $target who reads real articles. Explain the word \"$word\" as it is used in this $target sentence:\n" +
                 "\"$sentence\"\n\n" +
                 "Answer in $ui, plain text, no markdown, at most 4 short lines:\n" +
                 "1. Dictionary form of the word (if different) and its reading or romanisation when the script needs one.\n" +
-                "2. What it means in THIS sentence.\n" +
+                "2. What it means in THIS sentence: a short plain gloss of at most 6 words, without wording like \"in this sentence\".\n" +
                 "3. One short note on grammar, a particle, or a common phrase it belongs to, only if useful."
         }
 

@@ -21,7 +21,12 @@ class SentenceRepository @Inject constructor(private val sentences: SentenceDao)
     /** Returns the id of the saved sentence (new or existing). `position` is built with [position]. */
     suspend fun mine(userId: String, lang: String, text: String, sourceId: String?, position: String?): String {
         val clean = text.trim()
-        sentences.find(lang, clean, sourceId)?.let { return it.id }
+        sentences.find(lang, clean, sourceId)?.let { old ->
+            // a clip mined before word timing existed gets it the next time the line is mined
+            if (position != null && position.contains("\"words\"") && old.position?.contains("\"words\"") != true)
+                sentences.upsert(old.copy(position = position, updatedAt = System.currentTimeMillis()))
+            return old.id
+        }
         val now = System.currentTimeMillis()
         val id = UUID.randomUUID().toString()
         sentences.upsert(SentenceEntity(id, userId, lang, clean, null, sourceId, position, now, now))
@@ -39,6 +44,9 @@ class SentenceRepository @Inject constructor(private val sentences: SentenceDao)
             JSONObject().apply { if (chapter != null) put("chapter", chapter) }.put("paragraph", paragraph).put("start", start).put("end", end).toString()
 
         /** Where a sentence sits in a video: the subtitle line's start and end, in milliseconds from the start of the video. */
-        fun videoPosition(startMs: Long, endMs: Long): String = JSONObject().put("startMs", startMs).put("endMs", endMs).toString()
+        fun videoPosition(startMs: Long, endMs: Long, words: List<app.fluvour.media.SubWord> = emptyList()): String =
+            JSONObject().put("startMs", startMs).put("endMs", endMs).apply {
+                if (words.isNotEmpty()) put("words", org.json.JSONArray().apply { words.forEach { put(JSONObject().put("t", it.startMs).put("w", it.text)) } })
+            }.toString()
     }
 }

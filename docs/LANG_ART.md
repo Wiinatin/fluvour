@@ -55,3 +55,12 @@ The grain is drawn over all three by `paintArt`, same as the old art. Reduce mot
 > without changing the design or the generated files (fix the runtime or the call sites instead), then check each of those languages on Home,
 > Read, Speak and Watch: the faint mark in the corner, the ambient background, the Watch banner and the Home cover. Report anything that looks wrong
 > versus the HTML boards in `tools/langart/sources/` (open them in a browser).
+
+## Malay (ms): Sarawak art, in steps
+
+Source: the approved prototype `ms-art-prototype-v4` (not in the project). Board: `tools/langart/sources/ms.dc.html`.
+* **Step 1 (done, not built):** header mark only (State Legislative Assembly + Sarawak River; 192 KB of path data simplified to about 32 KB, tolerance 0.15). `MsArt.kt` has an EMPTY ambient layer, so Malay screens have no background art yet (it no longer falls back to the Japanese petals). Palettes in `Art.kt` / `Theme.kt`. `lxc:ms` uses the full width (0 14 140 108) because the building is wide. The grey mist ovals (ms1..ms3) are left out.
+* **Step 2 (done, not built):** background layer 296x300 in `ms.dc.html` (`<svg id="amb">`, paths simplified at 0.15, mist ovals left out, no birds; bead rows are 2 merged path nodes). `MsArt.kt` regenerated (112 ambient nodes, 55 animations). Runtime: `Ambient.kt` passes `dim` 0.3 for ms in dark; `paintLangAmbient` draws the static nodes of ms from a cached bitmap (`AmbientStaticCache`, `drawLangScene(part=1)`) and only the animated nodes (`part=2`) each frame. The Watch banner (`paintLangScene`) is NOT dimmed in dark yet.
+* **Step 3 (done, not built):** the six frameless covers as `<svg id="cov0">`..`cov5` in `ms.dc.html` (Longhouse = hexagon mark, Pitcher plant, Tree of life, Santubong arch, Rafflesia, Ribbons). Each carries `viewBox`, `data-w/h` and `data-sil` (silhouette path). `svg2scene.py`/`emit.py` now emit `MsArt.covers`, `coverViews`, `coverSil` when a board has `cov*` svgs. Keys `mc:0`..`mc:5` (`Art.kt` `paintMsCover`): artwork fits the box (meet), no tile, no paper, no rounded clip; the grain is clipped to the silhouette. `coverKeyFor`: Review 0, Output 1, Read 2, Watch 3, else 4; Output topics use `topicArtKey` (title hash). Read thumbnails still use the old art.
+* `emit.py` now writes 25 nodes per function (was 60) and `nodes = emptyArray()` for an empty scene. Only `MsArt.kt` was regenerated; the other 7 files still use the old chunk size.
+

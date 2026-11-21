@@ -1,0 +1,709 @@
+W:altercation	alter|-ation	other + act of
+W:alteration	alter|-ation	other + act of
+W:egomaniacal	ego|mania|-al	self + madness + relating to
+W:egomaniac	ego|mania|-c	self + madness + one who
+W:egocentric	ego|centr|-ic	self + center + relating to
+W:misogyny	miso|gyn|-y	hate + woman + state of
+W:misogamy	miso|gam|-y	hate + marriage + state of
+W:misanthropy	mis|anthrop|-y	hate + mankind + state of
+W:misogynous	miso|gyn|-ous	hate + woman + having
+W:misogynistic	miso|gyn|-istic	hate + woman + relating to
+W:misogamous	miso|gam|-ous	hate + marriage + having
+W:misanthropic	mis|anthrop|-ic	hate + mankind + relating to
+W:misanthropist	mis|anthrop|-ist	hate + mankind + one who
+W:misanthrope	mis|anthrop|-e	hate + mankind
+W:polygamy	poly|gam|-y	many + marriage
+W:polygyny	poly|gyn|-y	many + woman
+W:polyandry	poly|andr|-y	many + male
+W:bigamy	bi|gam|-y	two + marriage
+W:gynecologist	gyne|-cologist	woman + one who studies
+W:gynecology	gyne|-cology	woman + study
+W:monogamy	mono|gam|-y	one + marriage
+W:ambidextrous	ambi|dextr|-ous	both + right hand + having
+W:ambidexterity	ambi|dexter|-ity	both + right hand + state of
+W:dexterous	dexter|-ous	right hand + having
+W:adroitness	a|droit|-ness	toward + right hand + state of
+W:anthropology	anthropo|-logy	mankind + study
+W:philanthropist	phil|anthrop|-ist	love + mankind + one who
+W:philanthropy	phil|anthrop|-y	love + mankind + state of
+W:anthropologist	anthropo|-logist	mankind + one who studies
+W:polygynist	poly|gyn|-ist	many + woman + one who
+W:polyandrist	poly|andr|-ist	many + male + one who
+W:obstetrics	obstetr|-ics	midwife + field of
+W:epidermis	epi|derm|-is	upon + skin
+W:pedagogy	ped|agog|-y	child + leading
+W:pachyderm	pachy|derm	thick + skin
+W:dermatitis	dermat|-itis	skin + inflammation
+W:demagogue	dem|agog|-ue	people + leading
+W:demagoguery	dem|agogu|-ery	people + leading + practice
+W:optician	opt|-ician	sight + expert
+W:pediatrics	ped|-iatr|-ics	child + healing + field of
+W:taxidermist	taxi|derm|-ist	arrangement + skin + one who
+W:oculist	ocul|-ist	eye + one who
+W:ophthalmology	ophthalmo|-logy	eye + study
+W:monocle	mon|-ocle	one + eye
+W:ocular	ocul|-ar	eye + relating to
+W:optometrist	opto|metr|-ist	sight + measurement + one who
+W:dermatology	dermato|-logy	skin + study
+W:taxidermy	taxi|derm|-y	arrangement + skin
+W:hypodermic	hypo|derm|-ic	under + skin + relating to
+W:ophthalmologist	ophthalmo|-logist	eye + one who studies
+W:orthodontist	ortho|dont|-ist	straight + tooth + one who
+W:neuralgia	neur|-algia	nerve + pain
+W:orthopedics	ortho|ped|-ics	straight + child + field of
+W:psychiatry	psych|-iatr|-y	mind + healing
+W:neuritis	neur|-itis	nerve + inflammation
+W:neurosis	neur|-osis	nerve + abnormal condition
+W:psychotic	psych|-otic	mind + relating to
+W:geriatrics	ger|-iatr|-ics	old age + healing + field of
+W:cardiograph	cardio|graph	heart + write
+W:orthodontia	ortho|dont|-ia	straight + tooth + condition
+W:psychosis	psych|-osis	mind + abnormal condition
+W:gerontological	geront|-ological	old man + study
+W:senescent	senesc|-ent	old + becoming
+W:calligraphic	calli|graph|-ic	beauty + write + relating to
+W:cacographer	caco|graph|-er	bad + write + one who
+W:senile	sen|-ile	old + relating to
+W:callipygian	calli|pyg|-ian	beauty + buttocks + relating to
+W:calligraphy	calli|graph|-y	beauty + write
+W:cacography	caco|graph|-y	bad + write
+W:gerontology	geront|-ology	old man + study
+W:senility	sen|-ility	old + state of
+W:senescence	senesc|-ence	old + state of
+W:psychosomatic	psycho|somat|-ic	mind + body + relating to
+W:psychopathic	psycho|path|-ic	mind + disease + relating to
+W:psychology	psycho|-logy	mind + study
+W:psychic	psych|-ic	mind + relating to
+W:psychoanalysis	psycho|analysis	mind + analysis
+W:psychological	psycho|-logical	mind + study
+W:psychogenic	psycho|gen|-ic	mind + origin + relating to
+W:psychotherapy	psycho|therapy	mind + treatment
+W:psychopath	psycho|path	mind + disease
+W:psychopathy	psycho|path|-y	mind + disease
+W:pedodontic	pedo|dont|-ic	child + tooth + relating to
+W:podiatric	pod|-iatr|-ic	foot + healing + relating to
+W:tripod	tri|pod	three + foot
+W:osteopathic	osteo|path|-ic	bone + disease + relating to
+W:chirographic	chiro|graph|-ic	hand + write + relating to
+W:periodontist	peri|odont|-ist	around + tooth + one who
+W:podiatry	pod|-iatr|-y	foot + healing
+W:podium	pod|-ium	foot + place
+W:barometric	baro|metr|-ic	weight + measurement + relating to
+W:chiromancy	chiro|mancy	hand + divination
+W:chirography	chiro|graph|-y	hand + write
+W:chiropractic	chiro|practic	hand + practice
+W:platypus	platy|pus	flat + foot
+W:pedodontia	pedo|dont|-ia	child + tooth + condition
+W:osteopathy	osteo|path|-y	bone + disease
+W:chiropody	chiro|pod|-y	hand + foot
+W:autopsy	auto|-psy	self + sight
+W:autobiography	auto|bio|graph|-y	self + life + write
+W:biological	bio|-logical	life + study
+W:geometry	geo|metr|-y	earth + measurement
+W:geological	geo|-logical	earth + study
+W:astrophysics	astro|physics	star + physics
+W:astronomical	astro|nom|-ical	star + law + relating to
+W:astronomy	astro|nom|-y	star + law
+W:astrologer	astro|-loger	star + one who speaks
+W:biopsy	bio|-psy	life + sight
+W:autonomy	auto|nom|-y	self + law
+W:metronome	metro|nom|-e	measurement + law
+W:astronaut	astro|naut	star + sailor
+W:cosmonaut	cosmo|naut	universe + sailor
+W:geography	geo|graph|-y	earth + write
+W:autonomous	auto|nom|-ous	self + law + having
+W:nautical	naut|-ical	sailor + relating to
+W:biography	bio|graph|-y	life + write
+W:astrology	astro|-logy	star + study
+W:geology	geo|-logy	earth + study
+W:biology	bio|-logy	life + study
+W:sociological	socio|-logical	companion + study
+W:bibliophile	biblio|phile	book + love
+W:philander	phil|ander	love + male
+W:anglophile	anglo|phile	English + love
+W:atom	a|tom	not + cutting
+W:anatomical	ana|tom|-ical	up + cutting + relating to
+W:dichotomous	dicho|tom|-ous	in two + cutting + having
+W:dichotomize	dicho|tom|-ize	in two + cutting + make
+W:epitome	epi|tome	upon + cutting
+W:epitomize	epi|tom|-ize	upon + cutting + make
+W:eccentric	ec|centr|-ic	out + center + relating to
+W:philanderer	phil|ander|-er	love + male + one who
+W:sociology	socio|-logy	companion + study
+W:asocial	a|soci|-al	not + companion + relating to
+W:eccentricity	ec|centr|-icity	out + center + state of
+W:anatomy	ana|tom|-y	up + cutting
+W:dichotomy	dicho|tom|-y	in two + cutting
+W:egregious	e|greg|-ious	out + herd + having
+W:congenital	con|gen|-ital	together + birth + relating to
+W:chronic	chron|-ic	time + relating to
+W:notorious	not|-orious	known + having
+W:incorrigible	in|corrig|-ible	not + correct + able
+W:consummate	con|summ|-ate	together + highest + make
+W:unconscionable	un|con|scion|-able	not + with + know + able
+W:pathological	patho|-logical	disease + study
+W:genital	gen|-ital	birth + relating to
+W:notoriety	not|-oriety	known + state of
+W:gene	gen|-e	birth
+W:consummation	con|summ|-ation	together + highest + act of
+W:incorrigibility	in|corrig|-ibility	not + correct + state of
+W:genetics	gen|-etics	birth + field of
+W:genealogist	gene|-alogist	birth + one who studies
+W:consummacy	con|summ|-acy	together + highest + state of
+W:consummateness	con|summ|-ateness	together + highest + state of
+W:genetic	gen|-etic	birth + relating to
+W:genealogical	gene|-alogical	birth + study
+W:to consummate	con|summ|-ate	together + highest + make
+W:genealogy	gene|-alogy	birth + study
+W:chronological	chrono|-logical	time + study
+W:anachronism	ana|chron|-ism	back + time + practice of
+W:anachronous	ana|chron|-ous	back + time + having
+W:anachronistic	ana|chron|-istic	back + time + relating to
+W:apathy	a|path|-y	without + feeling
+W:chronometer	chrono|meter	time + measure
+W:pathology	patho|-logy	disease + study
+W:antipathy	anti|path|-y	against + feeling
+W:synchronize	syn|chron|-ize	together + time + make
+W:pathetic	path|-etic	suffering + relating to
+W:chronicity	chron|-icity	time + state of
+W:telepathy	tele|path|-y	distance + feeling
+W:pathologist	patho|-logist	disease + one who studies
+W:empathy	em|path|-y	in + feeling
+W:synchronous	syn|chron|-ous	together + time + having
+W:telepathic	tele|path|-ic	distance + feeling + relating to
+W:chronology	chrono|-logy	time + study
+W:chronometric	chrono|metr|-ic	time + measurement + relating to
+W:chronometry	chrono|metr|-y	time + measurement
+W:synchronization	syn|chron|-ization	together + time + act of
+W:sympathy	sym|path|-y	together + feeling
+W:empathize	em|path|-ize	in + feeling + make
+W:gregarious	greg|-arious	herd + relating to
+W:nescient	ne|scient	not + knowing
+W:unconscionability	un|con|scion|-ability	not + with + know + state of
+W:unconscionableness	un|con|scion|-ableness	not + with + know + state of
+W:prescient	pre|scient	before + knowing
+W:congregation	con|greg|-ation	together + herd + act of
+W:aggregate	ag|greg|-ate	toward + herd + make
+W:aggregation	ag|greg|-ation	toward + herd + act of
+W:segregate	se|greg|-ate	apart + herd + make
+W:omniscient	omni|scient	all + knowing
+W:congregate	con|greg|-ate	together + herd + make
+W:omniscience	omni|scien|-ce	all + knowing
+W:prescience	pre|scien|-ce	before + knowing
+W:nescience	ne|scien|-ce	not + knowing
+W:egregiousness	e|greg|-iousness	out + herd + state of
+W:gregariousness	greg|-ariousness	herd + state of
+W:segregation	se|greg|-ation	apart + herd + act of
+W:gerontologist	geront|-ologist	old man + one who studies
+W:chiromancer	chiro|mancer	hand + diviner
+W:placate	plac|-ate	please + make
+W:obviate	ob|via|-te	against + road
+W:disparage	dis|par|-age	apart + equal
+W:condone	con|don|-e	with + give
+W:malign	mal|-ign	bad
+W:equivocate	equi|voc|-ate	equal + voice + make
+W:militate	milit|-ate	soldier + make
+W:proscribe	pro|scrib|-e	before + write
+W:ambiguous	ambi|-guous	both + drive
+W:equivocal	equi|voc|-al	equal + voice + relating to
+W:parity	par|-ity	equal + state of
+W:disparity	dis|par|-ity	apart + equal + state of
+W:disparagement	dis|par|-agement	apart + equal + act of
+W:unequivocal	un|equi|voc|-al	not + equal + voice + relating to
+W:disparate	dis|par|-ate	apart + equal + having
+W:equivocation	equi|voc|-ation	equal + voice + act of
+W:ambiguity	ambi|-guity	both + drive + state of
+W:vocalize	voc|-alize	voice + make
+W:equilibrist	equi|libr|-ist	equal + balance + one who
+W:nocturnal	noct|-urnal	night + relating to
+W:equine	equ|-ine	horse + relating to
+W:vocal	voc|-al	voice + relating to
+W:equable	equ|-able	equal + able
+W:nocturne	noct|-urne	night
+W:equity	equ|-ity	equal + state of
+W:vociferous	voci|fer|-ous	voice + carry + having
+W:equestrian	equ|-estrian	horse + relating to
+W:equanimity	equ|animity	equal + mind
+W:inequitable	in|equ|-itable	not + equal + able
+W:equinox	equi|nox	equal + night
+W:equitable	equ|-itable	equal + able
+W:equilibrium	equi|libr|-ium	equal + balance
+W:equilateral	equi|later|-al	equal + side + relating to
+W:vocalist	voc|-alist	voice + one who
+W:inequity	in|equ|-ity	not + equal + state of
+W:equinoctial	equi|noct|-ial	equal + night + relating to
+W:maladroit	mal|droit	bad + right hand
+W:malevolent	male|vol|-ent	bad + wish + having
+W:militant	milit|-ant	soldier + one who
+W:proscription	pro|script|-ion	before + write + act of
+W:malaise	mal|-aise	bad + ease
+W:malediction	male|dict|-ion	bad + say + act of
+W:obviation	ob|via|-tion	against + road + act of
+W:militancy	milit|-ancy	soldier + state of
+W:trivial	tri|via|-l	three + road
+W:trivialities	tri|via|-lities	three + road
+W:maledictory	male|dict|-ory	bad + say + relating to
+W:malignity	mal|-ignity	bad + state of
+W:maladroitness	mal|droit|-ness	bad + right hand + state of
+W:malevolence	male|vol|-ence	bad + wish + state of
+W:proscriptive	pro|script|-ive	before + write + relating to
+W:dictatorial	dict|-atorial	say + relating to
+W:condonation	con|don|-ation	with + give + act of
+W:implacable	im|plac|-able	not + please + able
+W:placative	plac|-ative	please + relating to
+W:placatory	plac|-atory	please + relating to
+W:volition	vol|-ition	wish + act of
+W:placidity	plac|-idity	please + state of
+W:complacency	com|plac|-ency	with + please + state of
+W:complacence	com|plac|-ence	with + please + state of
+W:infidel	in|fid|-el	not + faith
+W:benign	ben|-ign	good
+W:benignant	ben|-ignant	good
+W:benevolent	bene|vol|-ent	good + wish + having
+W:infidelity	in|fidel|-ity	not + faith + state of
+W:benedictory	bene|dict|-ory	good + say + relating to
+W:beneficent	bene|fic|-ent	good + make + having
+W:fidelity	fidel|-ity	faith + state of
+W:benefactor	bene|fact|-or	good + do + one who
+W:benefaction	bene|fact|-ion	good + do + act of
+W:beneficiary	bene|fic|-iary	good + make + one who
+W:placable	plac|-able	please + able
+W:placid	plac|-id	please + having
+W:complacent	com|plac|-ent	with + please + having
+W:benevolence	bene|vol|-ence	good + wish + state of
+W:placation	plac|-ation	please + act of
+W:loquacious	loqu|-acious	speak + having
+W:garrulous	garr|-ulous	chatter + having
+W:taciturn	tac|-iturn	silent
+W:voluble	vol|-uble	roll
+W:verbose	verb|-ose	word + full of
+W:soliloquize	soli|loqu|-ize	alone + speak + make
+W:ventriloquize	ventri|loqu|-ize	belly + speak + make
+W:taciturnity	tac|-iturnity	silent + state of
+W:tacit	tac|-it	silent
+W:circumlocutory	circum|locut|-ory	around + speak + relating to
+W:colloquial	col|loqu|-ial	together + speak + relating to
+W:loquacity	loqu|-acity	speak + state of
+W:loquaciousness	loqu|-aciousness	speak + state of
+W:soliloquy	soli|loqu|-y	alone + speak
+W:circumlocution	circum|locut|-ion	around + speak + act of
+W:tacitness	tac|-itness	silent + state of
+W:ventriloquism	ventri|loqu|-ism	belly + speak + practice of
+W:colloquialism	col|loqu|-ialism	together + speak + practice of
+W:evolutionary	e|volut|-ionary	out + roll + relating to
+W:revolutionary	re|volut|-ionary	back + roll + relating to
+W:eloquence	e|loqu|-ence	out + speak + state of
+W:revolve	re|volv|-e	back + roll
+W:magnate	magn|-ate	large + one who
+W:magnanimous	magn|anim|-ous	large + mind + having
+W:verbal	verb|-al	word + relating to
+W:verbiage	verb|-iage	word
+W:verbosity	verb|-osity	word + state of
+W:magniloquence	magni|loqu|-ence	large + speak + state of
+W:grandiloquent	grandi|loqu|-ent	grand + speak + having
+W:garrulity	garr|-ulity	chatter + state of
+W:volubility	vol|-ubility	roll + state of
+W:verbatim	verb|-atim	word + exactly
+W:revolution	re|volut|-ion	back + roll + act of
+W:evolution	e|volut|-ion	out + roll + act of
+W:verbalize	verb|-alize	word + make
+W:eloquent	e|loqu|-ent	out + speak + having
+W:somniferous	somni|fer|-ous	sleep + carry + having
+W:soporific	sopor|-ific	sleep + making
+W:insomnious	in|somni|-ous	not + sleep + having
+W:avuncular	avuncul|-ar	uncle + relating to
+W:ventral	ventr|-al	belly + relating to
+W:dorsal	dors|-al	back + relating to
+W:endorse	en|dors|-e	on + back
+W:vociferate	voci|fer|-ate	voice + carry + make
+W:insomniac	in|somn|-iac	not + sleep + one who
+W:somnolent	somn|-olent	sleep + having
+W:somnambulist	somn|ambul|-ist	sleep + walk + one who
+W:ambulatory	ambul|-atory	walk + relating to
+W:amble	amb|-le	walk
+W:preamble	pre|amb|-le	before + walk
+W:somnambulistic	somn|ambul|-istic	sleep + walk + relating to
+W:endorsement	en|dors|-ement	on + back + act of
+W:vociferousness	voci|fer|-ousness	voice + carry + state of
+W:insomnia	in|somn|-ia	not + sleep + condition
+W:somnolence	somn|-olence	sleep + state of
+W:somnambulism	somn|ambul|-ism	sleep + walk + practice of
+W:perambulator	per|ambul|-ator	through + walk + one who
+W:somnolency	somn|-olency	sleep + state of
+W:perambulate	per|ambul|-ate	through + walk + make
+W:alternative	alter|-native	other
+W:alternate	alter|-nate	other
+W:hypochondriac	hypo|chondr|-iac	under + cartilage + one who
+W:atheist	a|the|-ist	without + God + one who
+W:monomaniac	mono|mani|-ac	one + madness + one who
+W:patricide	patri|-cide	father + killing
+W:uxoricide	uxor|-icide	wife + killing
+W:matron	matr|-on	mother
+W:patronymic	patr|onym|-ic	father + name + relating to
+W:patriarch	patri|arch	father + rule
+W:matriarch	matri|arch	mother + rule
+W:maternal	mater|-nal	mother + relating to
+W:maternity	mater|-nity	mother + state of
+W:matrimony	matri|-mony	mother + state of
+W:genocide	geno|-cide	race + killing
+W:patrimony	patri|-mony	father + state of
+W:diaphanous	dia|phan|-ous	through + show + having
+W:matricide	matri|-cide	mother + killing
+W:fratricide	frat|-ricide	brother + killing
+W:sororicide	soror|-icide	sister + killing
+W:homicide	homi|-cide	person + killing
+W:regicide	regi|-cide	king + killing
+W:infanticide	infant|-icide	baby + killing
+W:mariticide	marit|-icide	husband + killing
+W:parricide	parri|-cide	father + killing
+W:synonyms	syn|onym|-s	same + name
+W:antonyms	ant|onym|-s	opposite + name
+W:homonyms	hom|onym|-s	same + name
+W:homophones	homo|phone|-s	same + sound
+W:paternal	pater|-nal	father + relating to
+W:paternalistic	pater|-nalistic	father + relating to
+W:suicidal	sui|-cidal	oneself + killing
+W:synonymous	syn|onym|-ous	same + name + having
+W:antonymous	ant|onym|-ous	opposite + name + having
+W:homonymous	hom|onym|-ous	same + name + having
+W:homophonous	homo|phon|-ous	same + sound + having
+W:paternity	pater|-nity	father + state of
+W:paternalism	pater|-nalism	father + practice of
+W:suicide	sui|-cide	oneself + killing
+W:matronly	matr|-only	mother + like
+W:matrimonial	matri|-monial	mother + relating to
+W:patriarchal	patri|arch|-al	father + rule + relating to
+W:matriarchal	matri|arch|-al	mother + rule + relating to
+W:fraternize	frater|-nize	brother + make
+W:uxorious	uxor|-ious	wife + having
+W:regalia	reg|-alia	king
+W:monomaniacal	mono|mani|-acal	one + madness + relating to
+W:pyromaniacal	pyro|mani|-acal	fire + madness + relating to
+W:kleptomaniacal	klepto|mani|-acal	thief + madness + relating to
+W:incendiary	incend|-iary	set fire + relating to
+W:arson	ars|-on	burn
+W:satyromania	satyro|mania	satyr + madness
+W:claustrophobic	claustro|phob|-ic	enclosed place + fear + relating to
+W:acrophobic	acro|phob|-ic	highest + fear + relating to
+W:agoraphobic	agora|phob|-ic	market place + fear + relating to
+W:megalomaniacal	megalo|mani|-acal	great + madness + relating to
+W:nymphomaniacal	nympho|mani|-acal	bride + madness + relating to
+W:dipsomania	dipso|mania	thirst + madness
+W:fraternal	frater|-nal	brother + relating to
+W:uxorial	uxor|-ial	wife + relating to
+W:marital	marit|-al	husband + relating to
+W:regal	reg|-al	king + relating to
+W:extramarital	extra|marit|-al	outside + husband + relating to
+W:premarital	pre|marit|-al	before + husband + relating to
+W:sorority	soror|-ity	sister + state of
+W:monomania	mono|mania	one + madness
+W:kleptomania	klepto|mania	thief + madness
+W:pyromania	pyro|mania	fire + madness
+W:incendiarism	incend|-iarism	set fire + practice of
+W:megalomania	megalo|mania	great + madness
+W:nymphomania	nympho|mania	bride + madness
+W:claustrophobia	claustro|phobia	enclosed place + fear
+W:agoraphobia	agora|phobia	market place + fear
+W:acrophobia	acro|phobia	highest + fear
+W:arsonist	ars|-onist	burn + one who
+W:megalomaniac	megalo|mani|-ac	great + madness + one who
+W:nymphomaniac	nympho|mani|-ac	bride + madness + one who
+W:claustrophobe	claustro|phob|-e	enclosed place + fear
+W:agoraphobe	agora|phob|-e	market place + fear
+W:acrophobe	acro|phob|-e	highest + fear
+W:theology	theo|-logy	God + study
+W:pantheism	pan|the|-ism	all + God + practice of
+W:atheism	a|the|-ism	without + God + practice of
+W:agnosticism	a|gnost|-icism	not + known + practice of
+W:monotheism	mono|the|-ism	one + God + practice of
+W:polytheism	poly|the|-ism	many + God + practice of
+W:hypochondria	hypo|chondr|-ia	under + cartilage + condition
+W:hypertension	hyper|tens|-ion	over + stretch
+W:prognosis	pro|gnosis	before + knowing
+W:diagnostic	dia|gnost|-ic	through + knowing + relating to
+W:hypotension	hypo|tens|-ion	under + stretch
+W:prognosticate	pro|gnost|-icate	before + knowing + make
+W:diagnose	dia|gnos|-e	through + knowing
+W:prognostication	pro|gnost|-ication	before + knowing + act of
+W:diagnostician	dia|gnost|-ician	through + knowing + expert
+W:hypertensive	hyper|tens|-ive	over + stretch + relating to
+W:hypotensive	hypo|tens|-ive	under + stretch + relating to
+W:theologian	theo|log|-ian	God + study + one who
+W:dipsomaniacal	dipso|mani|-acal	thirst + madness + relating to
+W:agnostic	a|gnost|-ic	not + known + relating to
+W:diagnosis	dia|gnosis	through + knowing
+W:hypochondriacal	hypo|chondr|-iacal	under + cartilage + relating to
+W:convivial	con|viv|-ial	together + live + relating to
+W:versatile	vers|-atile	turn + able
+W:intrepid	in|trepid	not + tremble
+W:scintillating	scintill|-ating	spark + making
+W:urbane	urb|-ane	city
+W:oviparous	ovi|par|-ous	egg + give birth + having
+W:viviparous	vivi|par|-ous	live + give birth + having
+W:conviviality	con|viv|-iality	together + live + state of
+W:vivisection	vivi|sect|-ion	live + cut + act of
+W:antivivisectionist	anti|vivi|sect|-ionist	against + live + cut + one who
+W:devitalize	de|vital|-ize	from + life + make
+W:vivacity	viv|-acity	live + state of
+W:vivaciousness	viv|-aciousness	live + state of
+W:vitality	vital|-ity	life + state of
+W:revitalize	re|vital|-ize	again + life + make
+W:revive	re|viv|-e	again + live
+W:vital	vit|-al	life + relating to
+W:vivacious	viv|-acious	live + having
+W:vivid	viv|-id	live + having
+W:vitalize	vital|-ize	life + make
+W:vitamin	vit|-amin	life
+W:credulous	cred|-ulous	believe + having
+W:creed	cre|-ed	believe
+W:credible	cred|-ible	believe + able
+W:incredulous	in|cred|-ulous	not + believe + having
+W:incredible	in|cred|-ible	not + believe + able
+W:credo	cred|-o	believe
+W:credibility	cred|-ibility	believe + state of
+W:incredulity	in|cred|-ulity	not + believe + state of
+W:credence	cred|-ence	believe + state of
+W:credentials	cred|-entials	believe
+W:specious	spec|-ious	look + having
+W:pungence	pung|-ence	pierce + state of
+W:pungency	pung|-ency	pierce + state of
+W:acumen	acu|-men	sharpen
+W:acuity	acu|-ity	sharpen + state of
+W:circumspection	circum|spect|-ion	around + look + act of
+W:circumspectness	circum|spect|-ness	around + look + state of
+W:acupuncture	acu|punct|-ure	sharpen + point
+W:introspective	intro|spect|-ive	within + look + relating to
+W:punctilious	punct|-ilious	point + having
+W:puncture	punct|-ure	point
+W:retrospect	retro|spect	back + look
+W:punctuate	punct|-uate	point + make
+W:pungent	pung|-ent	pierce + having
+W:prospect	pro|spect	forward + look
+W:introspection	intro|spect|-ion	within + look + act of
+W:circumspect	circum|spect	around + look
+W:prospective	pro|spect|-ive	forward + look + relating to
+W:versatility	vers|-atility	turn + state of
+W:urban	urb|-an	city + relating to
+W:rusticate	rust|-icate	country + make
+W:intrepidity	in|trepid|-ity	not + tremble + state of
+W:rustic	rust|-ic	country + relating to
+W:rural	rur|-al	country + relating to
+W:magnanimity	magn|anim|-ity	large + mind + state of
+W:pusillanimous	pusill|anim|-ous	tiny + mind + having
+W:unanimous	un|anim|-ous	one + mind + having
+W:animosity	anim|-osity	mind + state of
+W:pusillanimity	pusill|anim|-ity	tiny + mind + state of
+W:unanimity	un|anim|-ity	one + mind + state of
+W:trepidation	trepid|-ation	tremble + act of
+W:scintillate	scintill|-ate	spark + make
+W:introspect	intro|spect	within + look
+W:scintillation	scintill|-ation	spark + act of
+W:suburbia	sub|urb|-ia	under + city + condition
+W:exurbia	ex|urb|-ia	out + city + condition
+W:interurban	inter|urb|-an	between + city + relating to
+W:intraurban	intra|urb|-an	within + city + relating to
+W:kleptomaniac	klepto|mani|-ac	thief + madness + one who
+W:dipsomaniac	dipso|mani|-ac	thirst + madness + one who
+W:pyromaniac	pyro|mani|-ac	fire + madness + one who
+W:cacophony	caco|phon|-y	bad + sound
+W:penury	penur|-y	want
+W:nostalgia	nost|-algia	return + pain
+W:carnivorous	carni|vor|-ous	flesh + devour + having
+W:anodyne	an|odyne	without + pain
+W:evanescent	e|vanesc|-ent	out + vanish + having
+W:eulogistic	eu|log|-istic	good + word + relating to
+W:penurious	penur|-ious	want + having
+W:affluence	af|flu|-ence	toward + flow + state of
+W:penuriousness	penur|-iousness	want + state of
+W:evanescence	e|vanesc|-ence	out + vanish + state of
+W:euphony	eu|phon|-y	good + sound
+W:platitude	plat|-itude	flat
+W:evanesce	e|vanesc|-e	out + vanish
+W:affluent	af|flu|-ent	toward + flow + having
+W:euphonic	eu|phon|-ic	good + sound + relating to
+W:euphonious	eu|phon|-ious	good + sound + having
+W:eulogy	eu|log|-y	good + word
+W:platitudinous	plat|-itudinous	flat + having
+W:eulogize	eu|log|-ize	good + word + make
+W:voraciously	vor|-aciously	devour
+W:voracity	vor|-acity	devour + state of
+W:omnipotence	omni|pot|-ence	all + powerful + state of
+W:omnibus	omni|-bus	all
+W:carnality	carn|-ality	flesh + state of
+W:carnage	carn|-age	flesh
+W:phonetics	phon|-etics	sound + field of
+W:reincarnation	re|in|carn|-ation	again + in + flesh + act of
+W:canine	can|-ine	dog
+W:feline	fel|-ine	cat
+W:vulpine	vulp|-ine	fox
+W:ursine	urs|-ine	bear
+W:nostalgic	nost|-algic	return + pain + relating to
+W:cacophonous	caco|phon|-ous	bad + sound + having
+W:herbivorous	herbi|vor|-ous	plant + devour + having
+W:omnivorous	omni|vor|-ous	all + devour + having
+W:voracious	vor|-acious	devour + having
+W:incarnate	in|carn|-ate	in + flesh + make
+W:omnipotent	omni|pot|-ent	all + powerful + having
+W:omnipresent	omni|present	all + present
+W:ubiquitous	ubiqu|-itous	everywhere + having
+W:carnal	carn|-al	flesh + relating to
+W:lupine	lup|-ine	wolf
+W:piscine	pisc|-ine	fish
+W:phonetic	phon|-etic	sound + relating to
+W:phonetician	phon|-etician	sound + expert
+W:impotent	im|pot|-ent	not + powerful + having
+W:ubiquity	ubiqu|-ity	everywhere + state of
+W:ubiquitousness	ubiqu|-itousness	everywhere + state of
+W:omnipresence	omni|presence	all + presence
+W:reincarnate	re|in|carn|-ate	again + in + flesh + make
+W:porcine	porc|-ine	pig
+W:carnivore	carni|vore	flesh + devour
+W:carnelian	carn|-elian	flesh
+W:simulate	simul|-ate	copy + make
+W:vacillate	vacill|-ate	swing + make
+W:enervate	e|nerv|-ate	out + nerve + make
+W:commiserate	com|miser|-ate	with + wretched + make
+W:recapitulate	re|capitul|-ate	again + chapter heading + make
+W:alleviate	al|lev|-iate	toward + light + make
+W:intimate	intim|-ate	innermost + make
+W:vegetate	veget|-ate	live and grow + make
+W:capitulate	capitul|-ate	chapter heading + make
+W:synergistic	syn|erg|-istic	together + work + relating to
+W:enervation	e|nerv|-ation	out + nerve + act of
+W:recapitulatory	re|capitul|-atory	again + chapter heading + relating to
+W:negate	neg|-ate	deny + make
+W:synergism	syn|erg|-ism	together + work + practice of
+W:synergy	syn|erg|-y	together + work
+W:decapitate	de|capit|-ate	from + head + make
+W:negation	neg|-ation	deny + act of
+W:decapitation	de|capit|-ation	from + head + act of
+W:recapitulation	re|capitul|-ation	again + chapter heading + act of
+W:capitulation	capitul|-ation	chapter heading + act of
+W:oscillate	oscill|-ate	swing + make
+W:ambivalent	ambi|val|-ent	both + strength + having
+W:dissimulate	dis|simul|-ate	apart + copy + make
+W:simulation	simul|-ation	copy + act of
+W:levity	lev|-ity	light + state of
+W:vacillatory	vacill|-atory	swing + relating to
+W:vacillating	vacill|-ating	swing + making
+W:levitate	lev|-itate	light + make
+W:alleviative	al|lev|-iative	toward + light + relating to
+W:alleviating	al|lev|-iating	toward + light + making
+W:commiseration	com|miser|-ation	with + wretched + act of
+W:intimation	intim|-ation	innermost + act of
+W:alleviation	al|lev|-iation	toward + light + act of
+W:vacillation	vacill|-ation	swing + act of
+W:ambivalence	ambi|val|-ence	both + strength + state of
+W:oscillation	oscill|-ation	swing + act of
+W:levitation	lev|-itation	light + act of
+W:obsequious	ob|sequ|-ious	toward + follow + having
+W:querulous	quer|-ulous	complain + having
+W:bibulous	bib|-ulous	drink + having
+W:supercilious	super|cili|-ous	above + eyelid + having
+W:innocuous	in|noc|-uous	not + harm + having
+W:obstreperous	ob|strep|-erous	against + make noise + having
+W:impecunious	im|pecun|-ious	not + cattle + having
+W:noxious	nox|-ious	harm + having
+W:sequel	sequ|-el	follow
+W:imbibe	im|bib|-e	in + drink
+W:obsequies	ob|sequ|-ies	toward + follow
+W:equestrienne	equ|-estrienne	horse
+W:subsequent	sub|sequ|-ent	under + follow + having
+W:pecuniary	pecun|-iary	cattle + relating to
+W:doleful	dole|-ful	suffer + full of
+W:sequence	sequ|-ence	follow + state of
+W:cavalcade	caval|-cade	horse
+W:cavalier	caval|-ier	horse
+W:cavalry	caval|-ry	horse
+W:cadaver	cad|-aver	fall
+W:decadent	de|cad|-ent	from + fall + having
+W:decadence	de|cad|-ence	from + fall + state of
+W:condolence	con|dol|-ence	with + suffer + state of
+W:condole	con|dol|-e	with + suffer
+W:genophobia	geno|phobia	race + fear
+W:pedophobia	pedo|phobia	child + fear
+W:thanatophobia	thanato|phobia	death + fear
+W:pathophobia	patho|phobia	disease + fear
+W:pantophobia	panto|phobia	all + fear
+W:ophthalmophobia	ophthalmo|phobia	eye + fear
+W:podophobia	podo|phobia	foot + fear
+W:mysophobia	myso|phobia	dirt + fear
+W:pyrophobia	pyro|phobia	fire + fear
+W:chirophobia	chiro|phobia	hand + fear
+W:gnosiophobia	gnosio|phobia	knowledge + fear
+W:megalophobia	megalo|phobia	great + fear
+W:photophobia	photo|phobia	light + fear
+W:astrophobia	astro|phobia	star + fear
+W:androphobia	andro|phobia	male + fear
+W:polyphobia	poly|phobia	many + fear
+W:gamophobia	gamo|phobia	marriage + fear
+W:musophobia	muso|phobia	mouse + fear
+W:spectrophobia	spectro|phobia	ghost + fear
+W:metrophobia	metro|phobia	measurement + fear
+W:kinesophobia	kineso|phobia	movement + fear
+W:thalassophobia	thalasso|phobia	sea + fear
+W:geraphobia	gera|phobia	old age + fear
+W:gerontophobia	geronto|phobia	old man + fear
+W:algophobia	algo|phobia	pain + fear
+W:odynophobia	odyno|phobia	pain + fear
+W:demophobia	demo|phobia	people + fear
+W:hedonophobia	hedono|phobia	pleasure + fear
+W:homophobia	homo|phobia	same + fear
+W:dermatophobia	dermato|phobia	skin + fear
+W:pnigerophobia	pnigero|phobia	choking + fear
+W:autophobia	auto|phobia	self + fear
+W:monophobia	mono|phobia	one + fear
+W:phonophobia	phono|phobia	sound + fear
+W:logophobia	logo|phobia	word + fear
+W:kleptophobia	klepto|phobia	thief + fear
+W:odontophobia	odonto|phobia	tooth + fear
+W:dipsophobia	dipso|phobia	thirst + fear
+W:chronophobia	chrono|phobia	time + fear
+W:phemophobia	phemo|phobia	voice + fear
+W:gynephobia	gyne|phobia	woman + fear
+W:ergophobia	ergo|phobia	work + fear
+W:philter	phil|-ter	love
+W:philantic	phil|-antic	love
+W:satyriasis	satyr|-iasis	satyr + condition
+W:virago	vir|-ago	man
+W:virtuoso	virtu|-oso	manly worth
+W:virtuosi	virtu|-osi	manly worth
+W:prurience	prur|-ience	itch + state of
+W:pruritis	prur|-itis	itch + inflammation
+W:gourmand	gourm|-and	glutton
+W:zoology	zoo|log|-y	animal + study
+W:zoological	zoo|log|-ical	animal + study + relating to
+W:entomology	entomo|log|-y	insect + study
+W:entomological	entomo|log|-ical	insect + study + relating to
+W:philology	philo|log|-y	love + word + study
+W:philological	philo|log|-ical	love + word + study + relating to
+W:graphology	graph|log|-y	write + study
+W:graphological	graph|log|-ical	write + study + relating to
+W:thermometer	thermo|met|-er	heat + measure
+W:barometer	baro|met|-er	weight + measure
+W:endodontist	end|odont|-ist	within + tooth + one who
+W:exodontic	ex|odont|-ic	out + tooth + relating to
+W:periodontia	peri|odont|-ia	around + tooth + condition
+W:endodontia	end|odont|-ia	within + tooth + condition
+W:exodontia	ex|odont|-ia	out + tooth + condition
+W:veteran	vet|-eran	old + one who
+W:inveterate	in|vet|-erate	in + old + having
+W:inveteracy	in|vet|-eracy	in + old + state of
+W:inveterateness	in|vet|-erateness	in + old + state of
+W:malefactor	mal|fac|-tor	bad + do + one who
+W:malefaction	mal|fac|-tion	bad + do + act of
+W:sycophant	syco|phan|-t	fig + show
+W:sycophantic	syco|phan|-tic	fig + show + relating to
+W:sycophancy	syco|phan|-cy	fig + show
+W:homicidal	homi|cid|-al	person + killing + relating to
+W:ingenious	in|gen|-ious	in + born + having
+W:ingenuous	in|gen|-uous	in + born + having
+W:ingenuity	in|gen|-uity	in + born + state of
+W:disingenuous	dis|in|gen|-uous	not + in + born + having
+W:ingenuousness	in|gen|-uousness	in + born + state of
+W:disingenuousness	dis|in|gen|-uousness	not + in + born + state of
+W:acute	acu|-te	sharpen
+W:acuteness	acu|-teness	sharpen + state of
+W:dolorous	dol|-orous	suffer + having
+W:dolor	dol|-or	suffer
+W:urbanity	urb|-anity	city + state of

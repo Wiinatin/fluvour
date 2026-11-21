@@ -18,7 +18,8 @@ JLPT = "https://raw.githubusercontent.com/stephenmk/yomitan-jlpt-vocab/main/orig
 CEFRJ = "https://raw.githubusercontent.com/openlanguageprofiles/olp-en-cefrj/master/cefrj-vocabulary-profile-1.5.csv"
 OCTA = "https://raw.githubusercontent.com/openlanguageprofiles/olp-en-cefrj/master/octanove-vocabulary-profile-c1c2-1.0.csv"
 HERMIT_CODE = {"zh": "zh_cn"}  # app language code -> folder name
-LANGS = ["ja", "th", "en", "zh", "ko", "es", "fr", "de", "vi", "id"]
+QURAN = "https://raw.githubusercontent.com/mustafa0x/quran-morphology/master/quran-morphology.txt"
+LANGS = ["ja", "th", "en", "zh", "ko", "es", "fr", "de", "vi", "id", "ms", "ar"]
 
 def get(url):
     with urllib.request.urlopen(url, timeout=60) as r:
@@ -31,6 +32,9 @@ def hermit(lang):
         w = line.rsplit(" ", 1)[0].strip().lower()
         if w and w not in ranks and len(ranks) < TOP:
             ranks[w] = len(ranks) + 1
+    if lang == "th":  # the Thai list has garbled rows, fragments and run-together phrases: see clean_thai.py
+        from clean_thai import clean
+        ranks = {w: i + 1 for i, w in enumerate(clean(list(ranks)))}
     return ranks
 
 def japanese_freq():
@@ -73,6 +77,37 @@ def cefr_levels():
                 if h and (h not in lv or order.index(lvl) < order.index(lv[h])): lv[h] = lvl
     return lv
 
+def plain_ar(s):  # same marks as srs/PlainForm.kt plainArabic()
+    return "".join(c for c in s if not (0x064B <= ord(c) <= 0x065F or ord(c) == 0x0670 or 0x06D6 <= ord(c) <= 0x06ED or ord(c) == 0x0640)).strip()
+
+def quran_ranks():
+    """Arabic = Quranic Arabic: rank 1 = most frequent LEMMA in the Quran (Quranic Arabic Corpus morphology, via mustafa0x).
+    Every plain surface form (whole word with its prefixes) gets the rank of its most common lemma. Alef wasla and plain alef both keyed."""
+    from collections import Counter, defaultdict
+    words = defaultdict(list)
+    for line in get(QURAN).splitlines():
+        p = line.split("\t")
+        if len(p) < 4: continue
+        c, v, w, _ = p[0].split(":")
+        words[(c, v, w)].append((p[1], p[3]))
+    lem_count, surf_lem = Counter(), defaultdict(Counter)
+    for segs in words.values():
+        surface = "".join(s for s, _ in segs)
+        main = [f for _, f in segs if "LEM:" in f and "PREF" not in f.split("|")] or [f for _, f in segs if "LEM:" in f]
+        if not main: continue
+        lem = [x[4:] for x in main[0].split("|") if x.startswith("LEM:")][0]
+        lem_count[plain_ar(lem)] += 1
+        surf_lem[plain_ar(surface)][plain_ar(lem)] += 1
+    order = [l for l, _ in sorted(lem_count.items(), key=lambda kv: (-kv[1], kv[0]))]
+    rank = {l: i + 1 for i, l in enumerate(order)}
+    ranks = dict(rank)
+    for surf, lems in surf_lem.items():
+        ranks.setdefault(surf, rank[lems.most_common(1)[0][0]])
+    for w, r in list(ranks.items()):  # also the plain-alef spelling users type
+        ranks.setdefault(w.replace("\u0671", "\u0627"), r)
+    print("ar lemmas", len(rank), "forms", len(ranks))
+    return ranks
+
 def write(lang, ranks, levels):
     words = dict(ranks)
     for w in levels: words.setdefault(w, 0)
@@ -87,4 +122,4 @@ if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     extra = {"ja": jlpt_levels, "zh": hsk_levels, "en": cefr_levels}
     for l in LANGS:
-        write(l, japanese_freq() if l == "ja" else hermit(l), extra[l]() if l in extra else {})
+        write(l, japanese_freq() if l == "ja" else quran_ranks() if l == "ar" else hermit(l), extra[l]() if l in extra else {})

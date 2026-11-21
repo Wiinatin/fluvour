@@ -31,7 +31,7 @@
 
 The full UI is ported to Compose (see docs/UI.md). Screens whose feature is not built yet use sample data (`ui/sample/SampleData.kt`) and carry a `TODO(name)` marker; find them with `grep -rn "TODO(" app/src`.
 
-- **Real features:** review (FSRS), reading and tap-to-lookup, cards and card editor, settings (language, UI language, theme, mode, goal, auto-play, account, Anki export), streaks.
+- **Real features:** review (FSRS, per-facet), Path sub-tab with lessons, drills and graduation test (see the Learning path section), reading and tap-to-lookup, cards and card editor, settings (language, UI language, theme, mode, goal, auto-play, account, Anki export), streaks.
 - **Sample data only:** Quiz (Phase 3), Watch (Phase 4), Output speaking (Phase 5), Output writing (Phase 6), Progress and weekly review (Phase 8).
 - **Art system:** each of the 10 languages has its own mark and ambient background. ja, th and en are drawn by hand in `Art.kt` and `Ambient.kt`. zh, ko, es, fr, de, vi and id come from `LangArt.kt`, a small runtime that draws scene data, plus 7 generated files, one per language, in `ui/art/lang/` (`ZhArt.kt` to `IdArt.kt`). **Do not hand-edit the generated files.** To change a design, edit its HTML board in `tools/langart/sources` and re-run the converter. `docs/LANG_ART.md` has the prompt for a Claude working on this.
 - **Icons:** adaptive launcher icon (foreground, background, monochrome) plus legacy and Play Store versions.
@@ -83,6 +83,21 @@ Phase 2 has two separate parts that share the same lookup engine (tokenizer, dic
 7. **Level tags:** CEFR / JLPT / HSK / frequency rank *(written, not yet built: popup chips with JLPT for Japanese, HSK for Chinese, CEFR for English and a frequency rank for all 10 languages; the other languages have no exam tags yet; see docs/PHASE2.md and docs/LEVELS.md)*
 8. **Book / EPUB and text import** (light novels, web novels, own files) with the same tap-to-lookup *(written, not yet built: paste text, .epub, .txt, .html; each chapter is saved as its own reader text with a contents page and next / previous; see docs/PHASE2.md)*
 9. **Yomitan-format dictionary import** (many community dictionaries: meanings, frequency, pitch accent). Check each dictionary's license *(written, not yet built: Settings > Dictionaries imports a Yomitan zip per language; meanings, frequency and pitch accent show in the word popup; see docs/PHASE2.md)*
+10. **Book library on the Read page** (covers, search, offline download, shelf, continue reading) *(written, not yet compiled or run on a phone; see docs/UI.md, "Read library")*
+    - **Sources:** Project Gutenberg through the Gutendex JSON API (free, no key, language filter, cover and EPUB links), and the user's own EPUB files. Other catalogs (OPDS, Standard Ebooks, Wikisource, Aozora) are later. Pirate-site connectors are out and will not be built. PDF books, manga and OCR are a separate project.
+    - **Flow:** search, open the detail page, Download (EPUB through the same importer as own files, so tap-to-lookup and sentence mining work unchanged), heart to keep on the shelf, Continue picks up in the chapter last read. Un-hearting never removes a downloaded book. Remove on the detail page deletes only the text and cover; cards and mined sentences stay.
+    - **Storage:** local Room table `library_books` (database version 13, `MIGRATION_12_13`), covers saved in `filesDir/covers`. Only hearted or downloaded books get a row; search results are cached in memory only.
+    - **Covers:** saved file, else the catalog image, else a generated cover (title and author on a block in the language colors). Own EPUBs use the cover inside the file when there is one.
+    - **Limits:** free catalogs are mostly older public-domain books, and Thai and Japanese choices are thinner than English. If Gutendex is down, search shows a retry line and the page keeps the downloaded books. Gutendex terms and rate limits are still to be checked before heavy use.
+    - **Checks without Android:** `tools/gutendextest`, `tools/librarytest`, `tools/epubcovertest` (plain JVM). Everything that touches Room, Compose or the network is untested until the Gradle compile.
+11. **Articles tab: online articles matched to your level** *(written, not yet compiled or run on a phone; nothing tested against the live sites; see docs/UI.md, "Articles tab")*
+    - **Sources (one small adapter each in `reading/articles/`, listed in `ArticleCatalog.all`):** Japanese: NHK News Web Easy and NHK News. English: Breaking News English, News in Levels, VOA Learning English, Simple English Wikipedia. Indonesian: BBC Indonesia and Detik. Thai: Thai PBS and BBC Thai. Wikipedia (ja, en, th, id) is the fallback for every language. Kompas and Tempo are not added because no working feed address was found. Paywall bypass, login scraping, pirate or leaked sites and scheduled crawling are out and will not be built.
+    - **Use:** personal use only, not shared or published. Reuse terms of the news sources are unchecked. Each adapter can be dropped alone.
+    - **Level measuring:** the app measures every article from its own words with the Watch clip method (`ClipMeasurer`, `Coverage`, `Levels`), never from a site label. Scales: ja JLPT N5 to N1, en CEFR A1 to C2, th and id six word-frequency bands shown as ~A1 to ~C2. Under 20 words, or without a level list, an article gets no level.
+    - **Storage:** local Room table `article_levels` keyed by url (database version 14, `MIGRATION_13_14`), not synced. A level is stored when an article is opened or checked. A saved article is the usual `sources` plus `articles` rows, reused by url.
+    - **Politeness:** one request at a time, 1.5 s between requests to the same site, an honest User-Agent, lists fetched when the tab opens and kept in memory, article text fetched only when opened. "Check levels" fetches up to 8 articles and keeps only their level.
+    - **Limits:** a row has no level until it is opened or checked, because the level needs the text. Site layouts change, so any adapter can break; a failing source is skipped and named in a "Skipped" line. Thai has the thinnest choice, expect mostly Thai Wikipedia. Levels are estimates from word lists, and th and id levels are rough bands.
+    - **Checks without Android:** `tools/articleleveltest`, `tools/articlesourcetest` (plain JVM, sample page shapes that are assumed, not taken from the live sites). Room, Hilt, Compose and all network calls are untested until the Gradle compile and a phone test.
 
 **Done when:** you can read a real article, tap unknown words, and have them become cards in one tap.
 
@@ -123,17 +138,33 @@ A floating overlay that works over any app (Mihon, YouTube, games, browsers), so
 
 ---
 
+## Learning path (Genki) — facets, Path tab, lessons, graduation test
+
+Built in chat steps 1 to 9 (written; Gradle build of steps 2 to 8 passed, device testing and step 9 compile still open). Decisions live in the handoff file, not here.
+
+1. **Facets:** one card, several tracks. Table `card_facets` (kinds WORD, MEANING, CLIP), each with its own FSRS state; `review_log.facetId`. MEANING unlocks after 2 non-Again WORD reviews and a 3+ day interval (`FacetRules`). Room v15, Supabase `backend/migrations/001_card_facets.sql` (run by hand), facet sync in `SyncRepository`. `CardEntity` FSRS columns are a legacy copy.
+2. **Study tab:** bottom tab Review is now Study. On Cards, a mode row (Mixed, Clip, Meaning, Word) with due badges. Mixed = due-time order across facets, new last, one facet per card per session. Mode is in memory, Mixed on start and on language switch.
+3. **Curriculum:** `assets/curriculum/ja-genki1.tsv`, made by `tools/curriculum/build_genki1.py` (edit the script, never the TSV). Own capped units in book order, no book text. `CurriculumRepository.hasCurriculum(lang)` hides the Path sub-tab.
+4. **Path sub-tab:** unit list (graduated, current, locked), unit detail, review-count nudge (never blocks). Room v16 `path_units` (local only).
+5. **Lessons:** one AI request per unit, cached in `filesDir/lessons`, local validation (`LessonLogic`). 4 chunks plus 8 drills. Misses are written to the card notes.
+6. **Unit check:** up to 30 questions (`TestRules`: 1.4 per word, 10 to 30), about 83% to pass, fresh on every retake. The app picks the unit's words and about 30% older words from FSRS state; the AI only writes the questions (`TestLogic`) and may use only words the learner knows (unit and earlier-unit words, cards at 14+ days, Heisig kanji at 20+ days, names of people), checked with Kuromoji (`VocabCheck`). Unit 1 has no check: it graduates when its drills are finished, and Unit 2's check covers both. Flag button (up to 3), misses sent to review.
+7. **Typed grading:** AI judges typed answers (`GradeLogic`). Drills grade in the background; the test grades all typed answers in one request; offline drills use the local check and a queue (`filesDir/grading/queue.tsv`).
+
+**Open:** device testing; Genki I fit check (`ja-genki1.tsv` now 87 units, ids changed in the book-order rebuild); typed answers in Cards reviews do not exist; extras (warm-up, images, unit story, speak-it, kanji hints, listening questions in the test); Genki II and Tobira; reading quiz mode (independent).
+
+---
+
 ## Phase 4 — Listening and video
 
 1. **In-app video player (YouTube content, Fluvour look)** that plays YouTube videos like local videos in Fluvour's own interface, with subtitle display and tap-to-lookup (see the decision record below)
-2. **Gemini recommends short clips:** Gemini generates search queries from your vocabulary, the YouTube Data API returns *real* videos (avoids hallucinated links)
+2. **Clip recommendations (4.2):** Gemini writes search phrases that fit your level and learned words, NewPipe search finds *real* videos (no YouTube Data API), and each clip is measured from its real subtitles, so nothing is hallucinated. Status: Phase 1 built and compiled. Phase 2, a background-grown local clip library, is written but not yet compiled or run on a phone (see the decision record below)
 3. **Video clip cards:** save the 3–5 seconds around a mined sentence
 4. **Speed control and A-B loop** on audio and video
 5. **Dictation mode:** hear a sentence, type it
 6. **Subtitle import** (your own .srt files from shows/anime) for lookup and mining
 7. **Shadowing mode:** repeat a clip, get pronunciation feedback
 
-**UI status:** the Watch screen (watch, dictate, transcript, say it back) is built with sample data and a simulated playhead. No real video, subtitles or mining yet.
+**UI status:** the Watch screen (watch, dictate, transcript, say it back) is built with sample data and a simulated playhead. No real video, subtitles or mining yet. Clip recommendations (item 2) add one quiet row to the idle Watch page and a clips view, see `docs/UI.md`.
 
 **Done when:** you can watch a video inside the app and mine it as easily as an article.
 
@@ -145,11 +176,31 @@ A floating overlay that works over any app (Mihon, YouTube, games, browsers), so
 - **Why not the official embedded player:** it cannot do tap-to-lookup on the real subtitle text, our own A-B loop and speed controls, 3 to 5 second clip cards, or background audio.
 - **Layout (portrait):** the Watch screen as built has an art banner on top, segmented progress, captions with an accent-coloured underlined word, Watch and Dictate tabs, and a say-it-back flow. The real video goes in a rounded 16:9 frame on the off-white page, not a black edge-to-edge block, with a live transcript sheet below it, the current line highlighted in the language accent and every word tappable. **Open decision:** when the player is built, does the real video replace the art banner, or does the banner stay as a fallback (no video, audio-only, loading)?
 - **Controls:** waveform scrubber with A-B loop markers, a big play button in the language accent, speed and subtitle-language buttons, and a "mine this line" button that saves the sentence, source link and timestamp (optionally the clip).
-- **Not like YouTube:** no red, no comments, no recommendations, no thumbs. Fluvour's own chips instead, such as a level tag and "78% known".
+- **Not like YouTube:** no red, no comments, no recommendations, no thumbs. Fluvour's own chips instead, such as a level tag and "78% known". The one exception is the clip list of item 2, which was asked for on purpose: it is level and vocabulary based, has no YouTube-style chrome, and is not an engagement feed.
 - **Landscape:** subtitles overlay the video. Tapping a word pauses it and opens the same lookup bottom sheet as the reader.
 - **Mini-player:** a floating button keeps audio playing while you switch tabs.
 - **Architecture:** the player screen talks only to a small `MediaSource` interface. The YouTube extractor is one implementation; local files and audio are others. If the extractor breaks or the approach changes, the player design does not.
 - **Personal app only:** this player approach is for the personal Android app. The student version lives on the Torbito web (Phase 9), where NewPipeExtractor cannot run, so web video needs a different approach, decided in Phase 9.
+
+### Decision record: clip recommendations (4.2)
+
+- **Goal:** recommend short real clips that fit the user's level and the words they have learned, and tag each with a level and two "how much do I know" numbers. The user never types a search.
+- **Pipeline:** one Gemini call writes search phrases (language, declared level, up to 30 learned words in, JSON out, no URLs or titles). NewPipe search finds videos for each phrase. A cheap cut keeps clips of 30 s to 5 min that are not in the watch history. Subtitles of the survivors are read, de-duplicated (auto captions repeat lines in a rolling window), counted, and measured. Every measured video is saved in the Room table `analyzed_videos` (word counts as JSON, level, token total, unique count), so the numbers can be recomputed as the user learns words, without new downloads.
+- **Two numbers per clip:** "<your level> knows N%" (running words at or below the declared level) and "you know M%" (the same, plus words of the user's graduated cards). English, Japanese and Chinese use exam level codes; every other language, Thai included, uses approximate bands of the frequency rank, and its numbers are shown with `~`. English has no lemmatizer, so its numbers are also `~`.
+- **Ranking:** normal levels aim for 90% "you know" inside an 85 to 95% band. At the top two levels of a scale percentages saturate, so clips with at least 85% "you know" are ordered by new words per minute. Constants live in `ClipRanking` and `ClipPlan`.
+- **Level per language:** set in the profile sheet, stored in settings. Clip count (1 to 30, default 6) is a Settings stepper. Result cache 24 h in SharedPreferences, cleared by the reload button or by changing language, level or count.
+- **Free only:** the only external call is Gemini, through the keys already in the app. If the quota is out the Watch row hides and nothing else is tried. Filmot and the YouTube Data API were rejected (paid or key-bound).
+- **Same personal-use basis as the player:** it uses NewPipe's unofficial interface, so it stays out of anything shared.
+- **Phase 2 (written, not yet compiled or run on a phone): a local clip library grown in the background.**
+  - **Why:** no public index matches subtitles to a learner's words (YouGlish runs its own crawl; Filmot is a paid API and was rejected). So the phone builds a small personal index: thousands of clips, not all of YouTube.
+  - **How videos are found:** the related videos that NewPipe returns next to a clip. `ExtractedMedia.related` (extractor API version 3) fills from the video page that is opened anyway, so it costs no extra request. Only clips that fit the learner (85 to 95% "you know", or at least 85% at the top two levels) seed the queue: up to 8 related videos of 30 s to 5 min each, skipping videos already in the library. Both the clips list and the background job seed. Channel listing was left out (it needs its own API bump).
+  - **Queue and job:** table `index_queue` (database version 10). `ClipIndexWorker` (WorkManager) runs every 3 h, only while charging and on an unmetered network, for the current learning language: one video at a time, a random 3 to 8 s pause, at most 100 videos a day, 8 minutes per run, and it stops after 5 failures in a row (WorkManager backs off). A link that fails 3 times is dropped. The measuring code is shared with the clips list (`ClipIndexer`).
+  - **Library:** same `analyzed_videos` table. A video without subtitles is kept as a marker row so it is never read again. Cap 5,000 usable clips (pruned to 4,500: clips outside the level prefilter first, never-shown and oldest first), markers capped at 20,000. A clip that is gone (private, removed, locked, no stream) is marked unavailable when it fails to open from the list; network errors do not mark it.
+  - **Recommending:** the clips list first shows a random sample of library rows near the learner's level (one level below to one above), ranked with the same code as Phase 1, with fresh Gemini search results added and ranked together at the end. Percentages are recomputed from stored word counts, so tags follow the learner's words with no new downloads. Clips shown recently are left out of the pool for 3 days so reload gives different ones.
+  - **Settings:** `Grow clip library in background` (default on) and `Library: N clips analyzed`.
+  - **Extractor update:** the version bump to 3 means the app ignores version 2 plugins until the "Extractor plugin" workflow has published a version 3 plugin; run it once by hand after pushing.
+  - **Risk:** bulk background reading is a heavier use of the unofficial YouTube interface than occasional search. It can be throttled or break, and it goes against YouTube's terms. Personal use only, never in anything shared. Hence slow, capped, off a metered connection, and optional.
+  - **Numbers are guesses** (daily cap, library cap, delays, pool size), all in `IndexPlan` and `ClipPlan`; tune after measuring on a phone. Handoff and step notes: `fluvour-4-2-phase2-handoff.md`.
 
 ---
 
@@ -180,6 +231,21 @@ A floating overlay that works over any app (Mihon, YouTube, games, browsers), so
 5. **Stroke-order animations** shown before practice (photos can't verify stroke order)
 6. **Daily journal with AI corrections:** explains each mistake, mistakes become cards
 7. **Grammar patterns as cards** (reviewable like vocabulary)
+8. **Heisig finger-writing pad** *(written, not yet compiled or run on a phone; see docs/UI.md, "Heisig writing pad")*
+    - On the Heisig review card you see the keyword, write the kanji from memory with your finger on a pad, tap Show answer, and see your drawing next to the correct kanji. A switch lays the answer over your strokes as a ghost.
+    - Extras: dashed guide grid toggle, numbered stroke-order animation (KanjiVG, tap to replay), Heisig story on the back, and the four ratings relabelled Wrong / Close / Good / Perfect.
+    - **Scheduling:** unchanged. The labels map to the same four `Rating` values (Again, Hard, Good, Easy), so there is no second scheduler.
+    - **Drawings are temporary:** never saved or synced, and no database change.
+    - **Left out:** automatic handwriting recognition (ML Kit Digital Ink) as a verdict, because finger scribbles are unreliable; saving a history of drawings.
+    - **Checks without Android:** `tools/padtest` (plain JVM) covers the stroke model. The pad, the screen and the stroke loading are untested until the Gradle compile.
+
+9. **Heisig practice pages** *(written, not yet compiled or run on a phone; see docs/UI.md, "Heisig practice pages")*
+    - A place to practise writing any Heisig kanji as often as you like: on the Heisig tab, right under Study, a search box and a grid of the whole deck. Tap a kanji for a full-screen page with a large pad, a dimmed copy to trace (switch), the Heisig story (switch) and a Submit button that clears the pad. A `Practice writing` button on the back of the review card opens the same page.
+    - **Maturity tiers:** kanji you have studied are framed by how well you know them (Copper, Silver, Gold, Jade, Radiant), from your Study ratings only. Gold and up move. The same colours tint kanji in reading and watch text, with one Settings switch.
+    - A small coral dot marks kanji due today.
+    - **Nothing is saved:** drawings and Submit counts are temporary, and there is no database change. Only the two switches and the colour setting are remembered.
+    - **Left out:** saving drawings, history, scores, handwriting recognition.
+    - **Checks without Android:** `tools/practicetest` (plain JVM) covers the search filter and the tier rules. Everything on screen is untested until the Gradle compile.
 
 **UI status:** the journal, handwriting and stroke-order screens are built with sample data. Camera capture, Gemini vision checking and AI corrections are still to do.
 
@@ -256,7 +322,7 @@ A floating overlay that works over any app (Mihon, YouTube, games, browsers), so
 | AI images | Hugging Face's own docs list under $0.10 of free credits per account each month, which is why one token runs out quickly; rotating several tokens (the Fylosphere pool) is what makes it workable, and a 402 or 429 moves to the next token. Gemini's image model is the fallback (its free image availability is not officially confirmed). Generate once per word, cache, one request at a time. |
 | Gemini + YouTube | Never trust Gemini to name videos. Use it to generate queries; YouTube Data API supplies real results. |
 | Video playback | NewPipeExtractor (library, GPLv3) + Media3/ExoPlayer, personal use only. Needs updating when YouTube changes; against YouTube's terms. |
-| Article sourcing | Stick to open licenses (Wikipedia, Wikinews, Tatoeba). Check terms for any news site. |
+| Article sourcing | Open licenses first (Wikipedia, Wikinews, Tatoeba). The Articles tab also reads learner and news sites (NHK, VOA, Breaking News English, News in Levels, BBC, Detik, Thai PBS) for personal use only; their terms are unchecked, so the app must not be shared with them as sources. One small adapter per site, so any can be removed. |
 | CJK / Thai lookup | Needs a tokenizer plus a dictionary. Hardest technical piece; start with one language (e.g. Japanese). |
 | Speaking | Whisper (or similar) for transcription, LLM for rewriting; store audio + text per version. |
 | Handwriting | Gemini vision first, ML Kit offline fallback. Thai support in ML Kit is uncertain, so verify. |

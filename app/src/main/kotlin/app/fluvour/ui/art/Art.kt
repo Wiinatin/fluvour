@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.ShaderBrush
@@ -93,6 +95,7 @@ object ArtPalettes {
     private val de = ArtPalette(c(0xCEDDD2), c(0x2F5F4B), c(0x9CBBA6), c(0xC9843F), c(0x2B3430), c(0xF1EEE0))
     private val vi = ArtPalette(c(0xF4D3DC), c(0xC25577), c(0xE8A7B8), c(0xE3B84E), c(0x2E4A44), c(0xFBF1E6))
     private val id = ArtPalette(c(0xE8D0BA), c(0x8C5434), c(0xD1A074), c(0x3F7F86), c(0x2A2F45), c(0xF6ECDC))
+    private val ms = ArtPalette(c(0xFFF3CF), c(0xCE1126), c(0xFDD116), c(0x1F6B5E), c(0xEE6A2C), c(0x1B2240))   // Sarawak: red, gold, teal, orange, navy
     /** Illustrations are printed art, so they keep their light inks in dark mode too. Languages without a row borrow the nearest family. */
     fun of(lang: String): ArtPalette = when (lang) {
         "th" -> th
@@ -104,6 +107,7 @@ object ArtPalettes {
         "de" -> de
         "vi" -> vi
         "id" -> id
+        "ms" -> ms
         else -> ja
     }
 }
@@ -620,7 +624,7 @@ fun rememberReduceMotion(): Boolean {
 @Composable
 fun Art(key: String, modifier: Modifier = Modifier, small: Boolean = false, corner: Dp = 0.dp) {
     val pal = ArtPalettes.of(Fluvour.lang)
-    val shape = RoundedCornerShape(corner)
+    val shape = if (key.startsWith("mc:")) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(corner)   // Malay covers are frameless
     val name = canon(key)
     val still = rememberReduceMotion()
     val clock: State<Float> = if (isLangKey(name) && still) remember { mutableStateOf(-1f) }   // still frame
@@ -632,8 +636,33 @@ fun Art(key: String, modifier: Modifier = Modifier, small: Boolean = false, corn
     Canvas(modifier.clip(shape)) { paintArt(name, pal, clock.value, size, small) }
 }
 
+/** Silhouette paths of the six Malay covers, parsed once (scene coordinates). */
+private val msCoverSil: Array<Path> by lazy {
+    val sils = app.fluvour.ui.art.lang.MsArt.coverSil
+    Array(sils.size) { i -> PathParser().parsePathString(sils[i]).toPath().also { it.fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd } }
+}
+
+/**
+ * A frameless Malay cover ("mc:0".."mc:5"): only the artwork's own silhouette, no tile and no paper behind it.
+ * The whole artwork fits the box (xMidYMid meet) and the grain is clipped to the silhouette.
+ */
+internal fun DrawScope.paintMsCover(key: String, pal: ArtPalette, clockMs: Float, box: Size, small: Boolean) {
+    val ms = app.fluvour.ui.art.lang.MsArt
+    val i = (key.substringAfter(':').toIntOrNull() ?: 0).coerceIn(0, ms.coverViews.size - 1)
+    val v = ms.coverViews[i]
+    val s = kotlin.math.min(box.width / v[2], box.height / v[3])
+    val tx = (box.width - v[2] * s) / 2f - v[0] * s
+    val ty = (box.height - v[3] * s) / 2f - v[1] * s
+    val t = if (clockMs < 0f) -1f else clockMs / 1000f
+    withTransform({ translate(tx, ty); scale(s, s, Offset.Zero) }) { drawLangScene(ms.covers[i], pal, t) }
+    val m = android.graphics.Matrix().apply { postScale(s, s); postTranslate(tx, ty) }
+    val sil = android.graphics.Path(msCoverSil[i].asAndroidPath()).apply { transform(m) }.asComposePath()
+    clipPath(sil) { drawRect(ShaderBrush(if (small) Grain.coverSmall else Grain.cover), Offset.Zero, box) }
+}
+
 /** Draws scene [key] into a box of [box] size at the current origin: cropped to fill (xMidYMid slice), then the grain over it. */
 internal fun DrawScope.paintArt(key: String, pal: ArtPalette, clockMs: Float, box: Size, small: Boolean) {
+    if (key.startsWith("mc:")) { paintMsCover(key, pal, clockMs, box, small); return }
     if (isLangKey(key)) {   // zh, ko, es, fr, de, vi, id: data-driven scenes from LangArt.kt
         paintLangScene(key, pal, clockMs, box)
         drawRect(ShaderBrush(if (small) Grain.coverSmall else Grain.cover), Offset.Zero, box)
@@ -653,13 +682,20 @@ fun stageKey(lang: String): String = when {
 }
 
 /** Home's "next up" cover: for languages with their own art it is the mark, cropped (lxc:). */
-fun coverKeyFor(lang: String, route: String): String = if (LangArt.has(lang)) "lxc:$lang" else coverKey(route)
+fun coverKeyFor(lang: String, route: String): String =
+    if (lang == "ms") msCoverFor(route) else if (LangArt.has(lang)) "lxc:$lang" else coverKey(route)
+
+/** Malay covers by route: Review Longhouse (0), Read Tree of life (2), Output Pitcher plant (1), Watch Santubong (3), else Rafflesia (4). */
+fun msCoverFor(route: String): String = when (route) { "cards" -> "mc:0"; "read" -> "mc:2"; "speak" -> "mc:1"; "watch" -> "mc:3"; else -> "mc:4" }
+
+/** Thumbnail for an Output topic: Malay picks one of the six covers by the title's hash, other languages cycle [topicArt]. */
+fun topicArtKey(lang: String, i: Int, title: String): String =
+    if (lang == "ms") "mc:${Math.floorMod(title.hashCode(), 6)}" else topicArt[i % 4]
 
 /** Cover for each "next up" and Today item (AK in the design). */
 fun coverKey(route: String): String = when (route) { "cards" -> "terraces"; "read" -> "leaf"; "speak" -> "coast"; "watch" -> "moon"; else -> "sunhills" }
 
-/** Thumbnails for the Output tab (CALLS and TA in the design). */
-val callArt = listOf("terraces", "leaf", "moon", "coast")
+/** Thumbnails for the topics on the Output tab (TA in the design). */
 val topicArt = listOf("sunhills", "sprouts", "mist", "bloom")
 
 /**

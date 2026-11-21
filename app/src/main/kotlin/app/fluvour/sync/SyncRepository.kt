@@ -28,7 +28,7 @@ private val Context.syncStore by preferencesDataStore("fluvour_sync")
 class SyncRepository @Inject constructor(
     @ApplicationContext private val ctx: Context,
     private val auth: AuthRepository, private val decks: DeckDao, private val cards: CardDao, private val logs: ReviewLogDao,
-    private val sources: SourceDao, private val sentences: SentenceDao
+    private val sources: SourceDao, private val sentences: SentenceDao, private val facets: CardFacetDao
 ) {
     private val lock = Mutex()
     private val kLast = longPreferencesKey("last_sync_at")
@@ -44,9 +44,9 @@ class SyncRepository @Inject constructor(
         val token = auth.validToken() ?: return@withLock "Could not reach your account. Try again online."
         val start = System.currentTimeMillis()
         try {
-            val pulled = pullDecks(token) + pullSources(token) + pullSentences(token) + pullCards(token) + pullLogs(token)
+            val pulled = pullDecks(token) + pullSources(token) + pullSentences(token) + pullCards(token) + pullFacets(token) + pullLogs(token)
             val pushed = pushDecks(token, session.userId, start) + pushSources(token, session.userId, start) +
-                pushSentences(token, session.userId, start) + pushCards(token, session.userId, start) +
+                pushSentences(token, session.userId, start) + pushCards(token, session.userId, start) + pushFacets(token, session.userId, start) +
                 pushLogs(token, session.userId, start)
             ctx.syncStore.edit { it[kLast] = start }
             "Synced: $pulled received, $pushed sent."
@@ -84,16 +84,36 @@ class SyncRepository @Inject constructor(
             phase = j.s("phase"), stability = j.d("stability"), difficulty = j.d("difficulty"), step = j.i("step"),
             lastReviewAt = j.ln("last_review_at"), dueAt = j.ln("due_at"), scheduledDays = j.i("scheduled_days"),
             reps = j.i("reps"), lapses = j.i("lapses"),
-            createdAt = j.l("created_at"), updatedAt = j.l("updated_at"), deleted = j.b("deleted")
+            createdAt = j.l("created_at"), updatedAt = j.l("updated_at"), deleted = j.b("deleted"),
+            variantWord = j.sn("variant_word"), variantExample = j.sn("variant_example"), root = j.sn("root"), lemma = j.sn("lemma"), variantExampleMeaning = j.sn("variant_example_meaning")
         )
         val local = cards.get(r.id)
-        if (local == null || r.updatedAt > local.updatedAt) { cards.upsert(r.copy(imageUrl = local?.imageUrl)); true } else false
+        if (local == null || r.updatedAt > local.updatedAt) {
+            cards.upsert(r.copy(imageUrl = local?.imageUrl))
+            // a card with no facets here yet (the facet rows may not have arrived, or the other device predates facets): WORD inherits the
+            // pulled state, MEANING starts locked. updatedAt 0 so a real facet row from the server always wins and these never get pushed.
+            facets.insertIgnore(listOfNotNull(FacetSeed.word(r, 0L), FacetSeed.meaning(r, 0L),
+                FacetSeed.sarawak(r, 0L).takeIf { app.fluvour.srs.needsSarawakFacet(r.word, r.variantWord) }))
+            true
+        } else false
+    }
+
+    private suspend fun pullFacets(token: String) = pull(token, "card_facets", "updated_at", "pull_facets") { j ->
+        val r = CardFacetEntity(
+            id = j.s("id"), userId = j.s("user_id"), cardId = j.s("card_id"), languageCode = j.s("language_code"), kind = j.s("kind"),
+            phase = j.s("phase"), stability = j.d("stability"), difficulty = j.d("difficulty"), step = j.i("step"),
+            lastReviewAt = j.ln("last_review_at"), dueAt = j.ln("due_at"), scheduledDays = j.i("scheduled_days"),
+            reps = j.i("reps"), lapses = j.i("lapses"), unlockedAt = j.ln("unlocked_at"),
+            updatedAt = j.l("updated_at"), deleted = j.b("deleted")
+        )
+        val local = facets.get(r.cardId, r.kind)
+        if (local == null || r.updatedAt > local.updatedAt) { facets.upsert(r.copy(id = local?.id ?: r.id)); true } else false
     }
 
     private suspend fun pullLogs(token: String) = pull(token, "review_log", "reviewed_at", "pull_logs") { j ->
         logs.insertAllIgnore(listOf(ReviewLogEntity(
             j.s("id"), j.s("user_id"), j.s("card_id"), j.i("rating"), j.l("reviewed_at"),
-            j.d("elapsed_days"), j.d("stability_after"), j.d("difficulty_after")
+            j.d("elapsed_days"), j.d("stability_after"), j.d("difficulty_after"), j.sn("facet_id")
         )))
         true
     }
@@ -161,8 +181,23 @@ class SyncRepository @Inject constructor(
             .put("phase", c.phase).put("stability", c.stability).put("difficulty", c.difficulty).put("step", c.step)
             .put("last_review_at", c.lastReviewAt ?: JSONObject.NULL).put("due_at", c.dueAt ?: JSONObject.NULL)
             .put("scheduled_days", c.scheduledDays).put("reps", c.reps).put("lapses", c.lapses)
+            .put("variant_word", c.variantWord ?: JSONObject.NULL).put("variant_example", c.variantExample ?: JSONObject.NULL)
+            .put("root", c.root ?: JSONObject.NULL).put("lemma", c.lemma ?: JSONObject.NULL)
+            .put("variant_example_meaning", c.variantExampleMeaning ?: JSONObject.NULL)
             .put("created_at", c.createdAt).put("updated_at", c.updatedAt).put("deleted", c.deleted) }, upsert = true)
         setPushCursor("push_cards", start); return rows.size
+    }
+
+    private suspend fun pushFacets(token: String, uid: String, start: Long): Int {
+        val rows = facets.changedSince(pushCursor("push_facets"))
+        push(token, "card_facets", rows.map { f -> JSONObject()
+            .put("id", f.id).put("user_id", uid).put("card_id", f.cardId).put("language_code", f.languageCode).put("kind", f.kind)
+            .put("phase", f.phase).put("stability", f.stability).put("difficulty", f.difficulty).put("step", f.step)
+            .put("last_review_at", f.lastReviewAt ?: JSONObject.NULL).put("due_at", f.dueAt ?: JSONObject.NULL)
+            .put("scheduled_days", f.scheduledDays).put("reps", f.reps).put("lapses", f.lapses)
+            .put("unlocked_at", f.unlockedAt ?: JSONObject.NULL)
+            .put("updated_at", f.updatedAt).put("deleted", f.deleted) }, upsert = true)
+        setPushCursor("push_facets", start); return rows.size
     }
 
     private suspend fun pushLogs(token: String, uid: String, start: Long): Int {
@@ -170,7 +205,8 @@ class SyncRepository @Inject constructor(
         push(token, "review_log", rows.map { l -> JSONObject()
             .put("id", l.id).put("user_id", uid).put("card_id", l.cardId).put("rating", l.rating)
             .put("reviewed_at", l.reviewedAt).put("elapsed_days", l.elapsedDays)
-            .put("stability_after", l.stabilityAfter).put("difficulty_after", l.difficultyAfter) }, upsert = false)
+            .put("stability_after", l.stabilityAfter).put("difficulty_after", l.difficultyAfter)
+            .put("facet_id", l.facetId ?: JSONObject.NULL) }, upsert = false)
         setPushCursor("push_logs", start); return rows.size
     }
 

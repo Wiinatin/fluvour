@@ -16,6 +16,7 @@ object SubtitleParser {
     private val LRC_LINE = Regex("^\\[(\\d+):(\\d{2})(?:[.:](\\d{1,3}))?](.*)$")
     private val XML_ITEM = Regex("<(p|text)\\b([^>]*)>(.*?)</\\1>", RegexOption.DOT_MATCHES_ALL)
     private val ATTR = Regex("([\\w:]+)=\"([^\"]*)\"")
+    private val S_ITEM = Regex("<s\\b([^>]*)>(.*?)</s>", RegexOption.DOT_MATCHES_ALL)
 
     fun parse(body: String): List<SubLine> {
         val b = body.trimStart('\uFEFF', ' ', '\n', '\r', '\t')
@@ -103,6 +104,20 @@ object SubtitleParser {
         return v.removeSuffix("s").toDoubleOrNull()?.let { (it * 1000).toLong() } ?: -1
     }
 
+    /**
+     * The timed words of one srv3 line: each `<s>` starts at the line's start plus its `t` offset (no `t` means the line's start).
+     * Empty when the line has fewer than two words, because a single piece is the whole line and says nothing about word timing.
+     */
+    private fun srv3Words(lineStart: Long, inner: String): List<SubWord> {
+        val out = ArrayList<SubWord>()
+        for (w in S_ITEM.findAll(inner)) {
+            val offset = ATTR.findAll(w.groupValues[1]).firstOrNull { it.groupValues[1] == "t" }?.groupValues?.get(2)?.toLongOrNull() ?: 0L
+            val text = decode(TAG.replace(w.groupValues[2], "")).replace("\n", " ")
+            if (text.isNotBlank()) out += SubWord(lineStart + offset, text)
+        }
+        return if (out.size > 1) out else emptyList()
+    }
+
     /** TTML/DFXP, YouTube srv1 (seconds), srv2 and srv3 (milliseconds). */
     private fun xml(body: String): List<SubLine> {
         val out = ArrayList<SubLine>()
@@ -116,7 +131,10 @@ object SubtitleParser {
                 else -> return@forEach
             }
             if (start < 0 || end < 0) return@forEach
-            out += SubLine(start, end, clean(m.groupValues[3].replace(Regex("<br\\s*/?>"), " ")))
+            val inner = m.groupValues[3]
+            // srv3 (YouTube automatic captions) puts each spoken word in <s t="offset from the line start">
+            val words = if (a["t"] != null) srv3Words(start, inner) else emptyList()
+            out += SubLine(start, end, clean(inner.replace(Regex("<br\\s*/?>"), " ")), words)
         }
         return out
     }
@@ -129,10 +147,18 @@ object SubtitleParser {
             val e = events.getJSONObject(i)
             val segs = e.optJSONArray("segs") ?: continue
             val text = StringBuilder()
-            for (j in 0 until segs.length()) text.append(segs.getJSONObject(j).optString("utf8", ""))
             val start = e.optLong("tStartMs", -1)
+            val words = ArrayList<SubWord>()
+            for (j in 0 until segs.length()) {
+                val seg = segs.getJSONObject(j)
+                val t = seg.optString("utf8", "")
+                text.append(t)
+                // automatic captions: each piece says when it starts, as an offset from the event's start
+                if (start >= 0 && t.isNotBlank()) words += SubWord(start + seg.optLong("tOffsetMs", 0L), t.replace("\n", " "))
+            }
             if (start < 0) continue
-            out += SubLine(start, start + e.optLong("dDurationMs", 3000), clean(text.toString().replace("\n", " ")))
+            // a single piece is the whole line (manual captions): no word timing in that
+            out += SubLine(start, start + e.optLong("dDurationMs", 3000), clean(text.toString().replace("\n", " ")), if (words.size > 1) words else emptyList())
         }
         return out
     }

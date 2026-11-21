@@ -44,8 +44,15 @@ class Board:
         defs = ET.fromstring('<root>' + s[a:b] + '</root>')
         a2 = s.find('<svg id="amb"'); b2 = s.find('</svg>', a2) + 6
         self.amb = ET.fromstring(s[a2:b2])
+        self.covers = []
+        pos = 0
+        while True:
+            c0 = s.find('<svg id="cov', pos)
+            if c0 < 0: break
+            c1 = s.find('</svg>', c0) + 6
+            self.covers.append(ET.fromstring(s[c0:c1])); pos = c1
         self.ids = {}
-        for root in (defs, self.amb):
+        for root in [defs, self.amb] + self.covers:
             for el in root.iter():
                 if el.get('id'): self.ids[el.get('id')] = el
         sym = [e for i, e in self.ids.items() if i.startswith('m-')]
@@ -261,6 +268,10 @@ class Board:
     def scene_mark(self):
         leaves = []
         for ch in self.sym: leaves += self.build(ch, {}, {})
+        return leaves
+    def scene_cover(self, el):
+        leaves = []
+        for ch in el: leaves += self.build(ch, {}, {})
         return leaves
     def scene_amb(self):
         leaves = []

@@ -16,6 +16,7 @@ import app.fluvour.ui.theme.ThemeId
 import app.fluvour.ui.theme.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,7 +26,8 @@ import javax.inject.Inject
 class AppViewModel @Inject constructor(
     private val settingsRepo: SettingsRepository, private val cardRepo: CardRepository,
     private val exporter: AnkiExporter, private val auth: AuthRepository,
-    private val sync: SyncRepository, private val images: ImageRepository
+    private val sync: SyncRepository, private val images: ImageRepository,
+    private val sarawakSuggester: app.fluvour.reading.SarawakSuggester
 ) : ViewModel() {
     val session: StateFlow<Session?> = auth.session.stateIn(viewModelScope, SharingStarted.Eagerly, null)
     private val _accountStatus = MutableStateFlow<String?>(null)
@@ -63,8 +65,10 @@ class AppViewModel @Inject constructor(
     private val lang = settingsRepo.settings.map { it.targetLang }.distinctUntilChanged()
     val cards: StateFlow<List<CardEntity>> =
         lang.flatMapLatest { cardRepo.observe(it) }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    /** Re-runs the due query every minute so learning cards are counted when their time comes (the query's "now" is fixed when it starts). */
+    private val minuteTick = flow { while (true) { emit(Unit); delay(60_000) } }
     val dueCount: StateFlow<Int> =
-        lang.flatMapLatest { cardRepo.observeDue(it) }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+        lang.flatMapLatest { l -> minuteTick.flatMapLatest { cardRepo.observeDue(l) } }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     /** Review counts per local day over the last 400 days, and the current streak. */
     val stats: StateFlow<Stats> =
@@ -86,26 +90,53 @@ class AppViewModel @Inject constructor(
     fun setTheme(t: ThemeId) = viewModelScope.launch { settingsRepo.setTheme(t) }
     fun setMode(m: ThemeMode) = viewModelScope.launch { settingsRepo.setMode(m) }
     fun setDailyGoal(n: Int) = viewModelScope.launch { settingsRepo.setDailyGoal(n) }
+    fun setClipCount(n: Int) = viewModelScope.launch { settingsRepo.setClipCount(n) }
+    fun setClipLibrary(on: Boolean) = viewModelScope.launch { settingsRepo.setClipLibrary(on) }
+    fun setLevel(lang: String, code: String) = viewModelScope.launch { settingsRepo.setLevel(lang, code) }
     fun setAutoPlay(on: Boolean) = viewModelScope.launch { settingsRepo.setAutoPlay(on) }
+    fun setArt(on: Boolean) = viewModelScope.launch { settingsRepo.setArt(on) }
+    fun setReduceMotion(on: Boolean) = viewModelScope.launch { settingsRepo.setReduceMotion(on) }
 
-    fun saveCard(existing: CardEntity?, word: String, meaning: String, example: String, notes: String, sentenceId: String? = null) =
+    fun saveCard(existing: CardEntity?, word: String, meaning: String, example: String, notes: String, sentenceId: String? = null,
+                 variantWord: String = "", variantExample: String = "", root: String = "", lemma: String = "", variantExampleMeaning: String = "") =
         viewModelScope.launch {
             val userId = settingsRepo.ensureUserId()
             val s = settingsRepo.settings.first()
-            val saved = cardRepo.save(userId, s.targetLang, existing, word.trim(), meaning.trim(),
-                example.trim().ifBlank { null }, notes.trim().ifBlank { null }, sentenceId)
+            val saved = cardRepo.save(userId, existing?.languageCode ?: s.targetLang, existing, word.trim(), meaning.trim(),
+                example.trim().ifBlank { null }, notes.trim().ifBlank { null }, sentenceId,
+                variantWord.trim().ifBlank { null }, variantExample.trim().ifBlank { null }, root.trim().ifBlank { null }, lemma.trim().ifBlank { null }, variantExampleMeaning.trim().ifBlank { null })
             // New words get a picture in the background when signed in; otherwise the card stays text-only.
             if (existing == null && session.value != null) images.generate(saved.id)
+            // Malay: a new card saved with the Sarawak boxes empty gets a suggestion from the AI, marked in the notes so it can be checked.
+            if (existing == null && saved.languageCode == "ms" && variantWord.isBlank() && variantExample.isBlank() && variantExampleMeaning.isBlank()) suggestSarawak(userId, saved)
         }
+    /** Fills the Sarawak side of a just-saved Malay card from the AI. Skipped if the card was edited or deleted meanwhile, or the AI has nothing to add. */
+    private suspend fun suggestSarawak(userId: String, saved: CardEntity) {
+        val sug = runCatching { sarawakSuggester.suggest(saved.word, saved.meaning) }.getOrNull() ?: return
+        val now = cardRepo.get(saved.id) ?: return
+        if (now.deleted || !now.variantWord.isNullOrBlank() || !now.variantExample.isNullOrBlank()) return
+        val notes = listOfNotNull(now.notes?.takeIf { it.isNotBlank() }, app.fluvour.reading.SarawakSuggestPrompt.NOTE).joinToString("\n\n")
+        cardRepo.save(userId, now.languageCode, now, now.word, now.meaning, now.example, notes, now.sentenceId,
+            sug.variantWord, sug.variantExample, now.root, now.lemma, sug.exampleMeaning)
+    }
+
     /** A card started from the reader: the editor picks this up once when it opens a new card. */
     private var draft: CardDraft? = null
-    fun startDraft(word: String, example: String, meaning: String = "", sentenceId: String? = null) { draft = CardDraft(word, example, meaning, sentenceId) }
+    /** A long AI explanation becomes a short meaning for the card; the whole text goes to the notes (the back of the card). */
+    fun startDraft(word: String, example: String, meaning: String = "", sentenceId: String? = null) {
+        val split = app.fluvour.reading.CardText.fromExplanation(meaning)
+        // Malay/Arabic explanations carry labelled fields (Standard / Sarawak / Vowelled / Root / Lemma); other languages give null here.
+        val f = app.fluvour.reading.LookupFields.parse(meaning)
+        draft = CardDraft(f?.word ?: word, example, split.meaning, sentenceId, split.notes,
+            f?.variantWord.orEmpty(), f?.variantExample.orEmpty(), f?.root.orEmpty(), f?.lemma.orEmpty())
+    }
     fun takeDraft(): CardDraft? = draft.also { draft = null }
 
-    fun deleteCard(id: String) = viewModelScope.launch { cardRepo.delete(id) }
+    fun deleteCard(id: String) = viewModelScope.launch { cardRepo.delete(id); CardEvents.notifyDeleted(id) }
 }
 
-data class CardDraft(val word: String, val example: String, val meaning: String = "", val sentenceId: String? = null)
+data class CardDraft(val word: String, val example: String, val meaning: String = "", val sentenceId: String? = null, val notes: String? = null,
+                     val variantWord: String = "", val variantExample: String = "", val root: String = "", val lemma: String = "")
 
 data class Stats(val countsByDay: Map<java.time.LocalDate, Int>, val streak: Int) {
     fun today(): Int = countsByDay[java.time.LocalDate.now()] ?: 0

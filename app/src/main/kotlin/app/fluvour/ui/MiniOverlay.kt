@@ -131,15 +131,16 @@ fun MiniOverlayWindow(vm: PlayerViewModel, overlay: MiniOverlay) {
     val audioOnly by vm.audioOnly.collectAsStateWithLifecycle()
     val slop = ViewConfiguration.get(androidx.compose.ui.platform.LocalContext.current).scaledTouchSlop
     var sx = 0f; var sy = 0f; var moved = false
-    Box(Modifier.size(MiniW, MiniH).clip(RoundedCornerShape(14.dp)).background(c.card).border(1.dp, c.line, RoundedCornerShape(14.dp))) {
-        MiniWindowBody(vm, audioOnly, playing, { overlay.returnToApp() }, Modifier.pointerInteropFilter { e ->
+    Box(Modifier.size(MiniW, MiniH).clip(RoundedCornerShape(14.dp)).background(androidx.compose.ui.graphics.Color.Black).border(1.dp, c.line, RoundedCornerShape(14.dp))) {
+        MiniWindowBody(vm, audioOnly, playing, { overlay.returnToApp() }) { onTap -> Modifier.pointerInteropFilter { e ->
             // Raw screen coordinates, because the window itself moves under the finger.
             when (e.actionMasked) {
                 MotionEvent.ACTION_DOWN -> { sx = e.rawX; sy = e.rawY; moved = false; overlay.begin() }
                 MotionEvent.ACTION_MOVE -> { val dx = e.rawX - sx; val dy = e.rawY - sy; if (moved || hypot(dx, dy) > slop) { moved = true; overlay.dragTo(dx, dy) } }
-                MotionEvent.ACTION_UP -> if (moved) overlay.settle() else overlay.returnToApp()
+                MotionEvent.ACTION_UP -> if (moved) overlay.settle() else onTap()
             }
             true
-        })
+        }
+    }
     }
 }

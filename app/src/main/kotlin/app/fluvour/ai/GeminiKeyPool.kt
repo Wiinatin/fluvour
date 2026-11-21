@@ -9,7 +9,7 @@ data class KeyEntry(
     val id: String,
     val key: String,
     val addedAt: Long,
-    val limitedAt: Long?   // when the key last hit a quota limit; kept even after the key works again
+    val limitedAt: Long?   // when the key last hit a quota limit; cleared as soon as the key answers a request again
 )
 
 /** What the UI may see: never the raw key. */
@@ -33,7 +33,7 @@ interface KeyStorage {
  * Rotating pool of Gemini API keys, ported from the Momori app (which ported it from Torbito's gemini_keys.py).
  * Order: never-limited keys first with the NEWEST added first, then limited keys with the OLDEST
  * limit stamp first. The first key is the active one. There is no timed cooldown; a limited key
- * just sorts behind fresh ones and keeps its stamp.
+ * just sorts behind fresh ones, is still tried when the others fail, and loses its stamp the moment it answers.
  */
 class GeminiKeyPool(
     private val storage: KeyStorage,
@@ -80,6 +80,11 @@ class GeminiKeyPool(
     suspend fun markLimited(id: String) {
         val now = clock()
         storage.update { list -> list.map { if (it.id == id) it.copy(limitedAt = now) else it } }
+    }
+
+    /** Removes one key's limit stamp: the key just answered, so it is not limited now. */
+    suspend fun clearLimit(id: String) {
+        storage.update { list -> list.map { if (it.id == id && it.limitedAt != null) it.copy(limitedAt = null) else it } }
     }
 
     /** Removes every limit stamp (used once to wipe stamps that earlier versions set by mistake). */

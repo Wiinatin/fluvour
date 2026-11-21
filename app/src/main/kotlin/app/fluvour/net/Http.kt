@@ -28,4 +28,29 @@ object Http {
             HttpResult(code, stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: "")
         } finally { conn.disconnect() }
     }
+
+    /** Downloads a file as bytes (follows redirects). Throws IOException on a non-2xx reply or when the file is larger than `maxBytes`. */
+    suspend fun getBytes(url: String, headers: Map<String, String> = emptyMap(), maxBytes: Int = 60 * 1024 * 1024, readTimeoutMs: Int = 60_000): ByteArray =
+        withContext(Dispatchers.IO) {
+            val conn = URL(url).openConnection() as HttpURLConnection
+            try {
+                conn.requestMethod = "GET"
+                conn.instanceFollowRedirects = true
+                conn.connectTimeout = 15_000
+                conn.readTimeout = readTimeoutMs
+                headers.forEach { (k, v) -> conn.setRequestProperty(k, v) }
+                val code = conn.responseCode
+                if (code !in 200..299) throw java.io.IOException("HTTP $code")
+                val out = java.io.ByteArrayOutputStream()
+                conn.inputStream.use { input ->
+                    val buf = ByteArray(64 * 1024)
+                    while (true) {
+                        val n = input.read(buf); if (n < 0) break
+                        out.write(buf, 0, n)
+                        if (out.size() > maxBytes) throw java.io.IOException("File too large")
+                    }
+                }
+                out.toByteArray()
+            } finally { conn.disconnect() }
+        }
 }

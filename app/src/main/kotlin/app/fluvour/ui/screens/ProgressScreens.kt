@@ -14,6 +14,10 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -21,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.fluvour.language.Languages
+import app.fluvour.reading.ClipLevels
 import app.fluvour.ui.*
 import app.fluvour.ui.sample.Sample
 import app.fluvour.ui.sample.forLang
@@ -62,10 +67,22 @@ fun LanguageSheet(current: String, onPick: (String) -> Unit, onClose: () -> Unit
     }
 }
 
+/** Picker for the declared level in one language (used for clip recommendations). Thai and other languages without an exam list get approximate bands. */
+@Composable
+fun LevelSheet(lang: String, current: String?, onPick: (String) -> Unit, onClose: () -> Unit) {
+    FSheet(onClose) {
+        H2("Your ${Languages.byCode(lang).name} level", size = 24.sp, modifier = Modifier.padding(top = 4.dp))
+        if (ClipLevels.scale(lang).byRank) Sm("About how common the words you know are. There is no official list for this language.", Modifier.padding(top = 4.dp, bottom = 8.dp))
+        ClipLevels.options(lang).forEach { (code, label) -> OptionRow(label, code == current, { onPick(code) }) }
+    }
+}
+
 /** Profile sheet from the Home header. Words known, streak and the heatmap are real. Skill bars are placeholder. */
 @Composable
-fun ProfileSheet(wordsKnown: Int, stats: Stats, lang: String, onSettings: () -> Unit, onProgress: () -> Unit, onClose: () -> Unit) {
+fun ProfileSheet(wordsKnown: Int, stats: Stats, lang: String, level: String?, onLevel: (String) -> Unit, onSettings: () -> Unit, onProgress: () -> Unit, onClose: () -> Unit) {
     val c = Fluvour.colors
+    var picking by remember { mutableStateOf(false) }
+    if (picking) LevelSheet(lang, level, onPick = { onLevel(it); picking = false }, onClose = { picking = false })
     FSheet(onClose, tall = true) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -76,6 +93,7 @@ fun ProfileSheet(wordsKnown: Int, stats: Stats, lang: String, onSettings: () -> 
             IconBtn(Icons.Outlined.Close, "Close", onClose)
         }
         StatsTriple(listOf(wordsKnown.toString() to "Words known", stats.streak.toString() to "Day streak", stats.today().toString() to "Cards today"))
+        ValueRow("${Languages.byCode(lang).name} level", ClipLevels.label(lang, level) ?: "Not set", { picking = true })
         Eyebrow("Last 12 weeks", Modifier.padding(top = 26.dp, bottom = 10.dp))
         Heatmap(stats)
         Eyebrow("Skills", Modifier.padding(top = 26.dp, bottom = 2.dp))

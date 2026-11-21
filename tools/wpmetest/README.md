@@ -1,0 +1,9 @@
+# Word Power deck parser check (Word Power, step 2)
+
+Checks `reading/WpmeData.kt` `reading/WpmeLocator.kt` and `reading/WpmeExcerpt.kt` (the "See more" passage and the reader position) and, since step 6, `ai/WpmeLinksPrompt.kt` with `reading/WpmeLinks.kt` (the word to parts prompt, reply reading, checker and `wpme-links.tsv`; synthetic only, `LinksTest.kt`) and, since step 7, `reading/WpmeStudyPlan.kt` (the unlock rule, session order and progress file, with the real FSRS scheduler; `StudyTest.kt`) (card types, filler dropped, duplicates merged, part-of-speech tags stripped, element examples, the `wpme.tsv` round trip) on a plain JVM, with synthetic notes and with the real `.apkg`.
+Chat cannot run Gradle, but it can download the Kotlin compiler from github.com (`JetBrains/kotlin` releases, `kotlin-compiler-2.0.21.zip`).
+
+1. Dump the deck notes (plain JVM has no SQLite): `python3 tools/wpmetest/dump_apkg.py Word_Power_Made_easy_-_Complete.apkg notes.tsv`
+2. `WpmeData` reads the deck-name JSON with `MiniJson`: extract it (from `reading/Yomitan.kt`, the lines of `object MiniJson` up to its closing `}` at column 0) into `MiniJson.kt` with `package app.fluvour.reading`.
+3. `R=app/src/main/kotlin/app/fluvour/reading; kotlinc MiniJson.kt $R/ImportText.kt $R/EpubReader.kt $R/WpmeData.kt $R/WpmeLocator.kt $R/WpmeExcerpt.kt $R/WpmeLinks.kt $R/WpmeStudyPlan.kt srs/src/main/kotlin/app/fluvour/srs/Fsrs.kt app/src/main/kotlin/app/fluvour/ai/WpmeLinksPrompt.kt tools/wpmetest/StudyTest.kt tools/wpmetest/LinksTest.kt tools/wpmetest/LocatorTest.kt tools/wpmetest/Test.kt -d out`
+4. `java -cp "out:kotlinc/lib/kotlin-stdlib.jar" TestKt notes.tsv Word_Power_Made_Easy.epub`   (every line should start with `ok` apart from the `real:` info lines, the last line `ALL OK`; without the two files only the synthetic checks run; the book check runs the app's own `EpubReader` on the EPUB)

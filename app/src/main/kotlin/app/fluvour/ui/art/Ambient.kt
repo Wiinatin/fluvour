@@ -391,11 +391,13 @@ fun Modifier.ambient(v: String = "", e: String = "eo", bleed: Dp = 0.dp): Modifi
     val fam = family(Fluvour.lang)
     val langCode = Fluvour.lang
     val lx = LangArt.has(langCode)
+    val dimMs = if (langCode == "ms" && Fluvour.dark) 0.3f else 1f
     val variant = if (fam == "en") e else v
     val clock = rememberAmbientClock(fam == "en" && !lx, variant == "eh", ArtPrefs.enabled && !reduce)
-    if (!ArtPrefs.enabled || reduce) return this
+    // Reduce motion freezes the Malay/lang art on a still frame; it no longer hides the background altogether.
+    if (!ArtPrefs.enabled || (reduce && !lx)) return this
     return this.then(Modifier.drawBehind {
-        val ms = clock.value
+        val ms = if (reduce && lx) -1f else clock.value
         val d = density
         val bleedPx = bleed.toPx()
         val wDp = (size.width + 2 * bleedPx) / d
@@ -406,7 +408,7 @@ fun Modifier.ambient(v: String = "", e: String = "eo", bleed: Dp = 0.dp): Modifi
             translate(-bleedPx, 0f) {
                 withTransform({ scale(d, d, Offset.Zero) }) {
                     when {
-                        lx -> paintLangAmbient(langCode, pal, ms, wDp)
+                        lx -> paintLangAmbient(langCode, pal, ms, wDp, dimMs)
                         fam == "th" -> translate(wDp - 390f, 0f) { thaiRipples(pal, ms, variant != "r") }
                         fam == "ja" -> japanPetals(pal, ms, wDp)
                         else -> { Flock.draw(this, pal.il4, wDp, 420f); englishStreaks(pal, ms, wDp, variant == "eh") }

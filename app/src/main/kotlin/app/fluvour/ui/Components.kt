@@ -49,7 +49,7 @@ import kotlin.math.sin
 // ---------------------------------------------------------------------------------------------
 @Composable @ReadOnlyComposable fun serifFont(): FontFamily = if (Fluvour.style.designFonts) FluvourFonts.Serif else FontFamily.Default
 /** Font for text in the language being learned. */
-@Composable @ReadOnlyComposable fun targetFont(): FontFamily = if (Fluvour.style.designFonts) FluvourFonts.target(Fluvour.lang) else FontFamily.Default
+@Composable @ReadOnlyComposable fun targetFont(): FontFamily = if (Fluvour.lang == "ar") FluvourFonts.ArabicQuran else if (Fluvour.style.designFonts) FluvourFonts.target(Fluvour.lang) else FontFamily.Default
 @Composable @ReadOnlyComposable fun uiWeight(): FontWeight = if (Fluvour.style.designFonts) FontWeight.Medium else FontWeight.Bold
 
 // ---------------------------------------------------------------------------------------------
@@ -199,7 +199,8 @@ fun UnderlineTabs(items: List<String>, selected: Int, onSelect: (Int) -> Unit, m
         Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             items.forEachIndexed { i, label ->
                 val on = i == selected
-                Column(Modifier.clickable { onSelect(i) }.padding(top = 10.dp)) {
+                // IntrinsicSize.Max: without it the underline's fillMaxWidth makes the first tab as wide as the whole row and pushes the others off screen
+                Column(Modifier.width(IntrinsicSize.Max).clickable { onSelect(i) }.padding(top = 10.dp)) {
                     Text(label, fontSize = 13.5.sp, color = if (on) c.ink else c.mute, modifier = Modifier.padding(bottom = 10.dp))
                     Box(Modifier.height(2.dp).fillMaxWidth().background(if (on) c.accent else Color.Transparent))
                 }

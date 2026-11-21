@@ -32,6 +32,26 @@ class ArticleRepository @Inject constructor(private val articles: ArticleDao, pr
         return Result.success(id)
     }
 
+    /** Saves an article from any source (Articles tab). Reuses a saved copy by url. The text is already fetched, so a failure leaves nothing half-saved. */
+    suspend fun saveFetched(userId: String, lang: String, a: app.fluvour.reading.articles.ArticleText): Result<String> = runCatching {
+        articles.byUrl(a.url)?.let { return@runCatching it.id }
+        val now = System.currentTimeMillis()
+        val sourceId = UUID.randomUUID().toString()
+        sources.upsert(SourceEntity(sourceId, userId, "article", a.title, a.url,
+            org.json.JSONObject().put("license", a.license).toString(), now, now))
+        val id = UUID.randomUUID().toString()
+        try { articles.upsert(ArticleEntity(id, userId, sourceId, lang, a.title, a.body, a.url, a.license, now, now)) }
+        catch (e: Exception) { sources.softDelete(sourceId, now); throw e }
+        id
+    }
+
+    /** Saved copies among these web addresses, by url. Used to mark rows of the Articles list that open without downloading. */
+    suspend fun savedIds(urls: List<String>): Map<String, String> {
+        val out = HashMap<String, String>()
+        for (u in urls.distinct()) articles.byUrl(u)?.let { out[u] = it.id }
+        return out
+    }
+
     /** Removes an article, or a whole book with all its chapters. Cards and mined sentences made from it stay. */
     suspend fun deleteSource(sourceId: String) {
         val now = System.currentTimeMillis()

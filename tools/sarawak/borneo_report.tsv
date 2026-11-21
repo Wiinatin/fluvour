@@ -1,0 +1,828 @@
+status	sarawak	standard_malay	pack_english	site_english	site_malay	site_spelling
+CONFLICT	Biuk	Menyampah	Disgusted	worried	mati akal, susah hati	
+CONFLICT	Ceridak	Kotor	Dirty	disgusting	pengotor	
+CONFLICT	Dango	Mainan	Toy	hut in a garden or farm	pondok kebun	
+CONFLICT	Eksen	Berlagak	Stuck up	arrogant	sombong	
+CONFLICT	Geng		Member	friend	kawan, sahabat	
+CONFLICT	Ingga	Meloyakan	Nauseating	annoyed	menyampah	
+CONFLICT	Kali		Perhaps	maybe	mungkin	
+CONFLICT	Kelak		Later	soon	nanti	
+CONFLICT	Kelakar		Talk	to speak	bercakap	
+CONFLICT	Lua		Out	outside	luar	
+CONFLICT	Malam tok		Tonite	tonight	malam ini	
+CONFLICT	Nait	Naik	Go up	to raise	menaikkan	
+CONFLICT	Nangga	Tengok; Lihat	Look	to watch, to see	melihat, menonton	
+CONFLICT	Nerais	Jerit	Shout	to scream	menjerit	
+CONFLICT	Ngabas		Visit	visiting	ziarah	
+CONFLICT	Ngegeh	Gedik	Not Shy	annoying, to show off	menyampah, mengada-ngada	
+CONFLICT	Ngibun	Jaga	Looking after	take care	menjaga	
+CONFLICT	Raon	Jalan jalan	Sightseeing	to walk, walk around	berjalan	
+CONFLICT	Renah	Tak nakal; Perangai elok	Well behaved	to live, to stay, to stop	tinggal, berhenti	
+CONFLICT	Rusak		Damage	deer	rusa	
+CONFLICT	Telok	Sudut	Corner	room	bilik	
+absent	Abis	Habis	Finish; End; Loss			
+absent	Abu abu	Cakap kosong; unreliable	Blur			
+absent	Acap aek	Dimasuki air (banjir)	Flood			
+absent	Ada		Available; Have			
+absent	Agik	Lagi	Again			
+absent	Akar		Root			
+absent	Akher	Lambat	Late; Tardy			
+absent	Alus	Halus	Fine; Delicate; Gentle; Intricate			
+absent	Amben	Berpantang selepas melahirkan	Confinement period			
+absent	Ambor	Sepah	Messy			
+absent	Ampit	Cukup	Enough			
+absent	Ampus	Asma; Lelah	Asthma			
+absent	Anak laki		Son			
+absent	Anak ompuan		Daughter			
+absent	Anco	Hancur	Crushed			
+absent	Ancor	Hancur	Destroyed; shattered			
+absent	Angat	Panas	Heat			
+absent	Anggus	Gigit	Bite off			
+absent	Angus	Terbakar	Burnt			
+absent	Antap	Terlebih	Over (reaction)			
+absent	Apa apa jak		Whatever			
+absent	Api	Lampu	Lamp; Fire			
+absent	Arap ati		Hope			
+absent	Ari marek		Yesterday			
+absent	Ariya	Hari itu	That day			
+absent	Aruk	Goreng	Fry			
+absent	Asak ati	Gembira	Happy			
+absent	Atas		Above; On			
+absent	Ator		Fix			
+absent	Atoran		Arrangement			
+absent	Aus	Haus; Dahaga	Thirsty			
+absent	Ayong	Kepala pusing	Light headed			
+absent	Babo	Nyanyuk	Senile			
+absent	Bagey	Bagai	Like			
+absent	Bagik	Bahagi; Agih	Divide			
+absent	Bagus		Good			
+absent	Bagus olah		Polite			
+absent	Bagus perangey		Polite			
+absent	Bait ati		Kind			
+absent	Bandong	Ubi Kayu	Cassava			
+absent	Bangun		Awake			
+absent	Bansa		Tribe			
+absent	Bantal bau	Bantal busuk	Worn out Pillows that toddlers would not let go off			
+absent	Barangkali		Perhaps			
+absent	Baruk baruk tok		Recently			
+absent	Bebal	Dungu	Stupid; Foolish			
+absent	Bebual	Loya	Nausea			
+absent	Begaut	Nak cepat	in a hurry			
+absent	Bego	Marah	Scold			
+absent	Bejit	Nakal	Naughty			
+absent	Belalak	Ketagih	Addicted			
+absent	Belemey	Terpalit semua	Stained all over body			
+absent	Beliang ati	Cemas	Panick; Worried			
+absent	Belok kanan		Turn Right			
+absent	Belok kerek		Turn Left			
+absent	Belukuk	Seketul	A chunk			
+absent	Beraie	Rindu	Missing someone			
+absent	Berambeh makan	Singgah makan	Stay for a meal			
+absent	Berbual	Loya	Nausea			
+absent	Berdebus	Pergi cepat cepat	Went out in a dash			
+absent	Berdengah	Berlagak	Boastful			
+absent	Berderuk	Banyak (orang) datang	A lot of people coming			
+absent	Berenti		Stop			
+absent	Bergagan	Sangat suka	Excited			
+absent	Bergala-gala	Besar	Big			
+absent	Berinsut	Bergerak perlahan	Move slowly			
+absent	Beritong berondeng	Berkira	Calculative			
+absent	Berolah	Nakal	Naughty			
+absent	Bersalah		Guilt			
+absent	Bersimpan	Kemas kemas	Tidy up			
+absent	Bertekang	Kotor	Dirty			
+absent	Bertikas	Selekeh	Messy			
+absent	Bes		Fun; Pleasant			
+absent	Betul		Accurate			
+absent	Betup betup	Besar; Bulat	Huge; Round			
+absent	Bicin	Monosodium glutamate	Monosodium glutamate			
+absent	Bila bila jak		Whenever			
+absent	Bila bila masa		Anytime			
+absent	Bilit		Room			
+absent	Bilit aek	Bilik air	Bathroom; toilet			
+absent	Bilit tido		Bedroom			
+absent	Binatang		Animal			
+absent	Bingong	Risau	Worry			
+absent	Biol	Bingung	Confused			
+absent	Biru membiru	Lebam lebam	Blue and black bruises			
+absent	Bisak	Koyak	Torn			
+absent	Bisin	Bising	Noisy			
+absent	Bodo		Dumb; Fool; Idiot; Stupid			
+absent	Bol		Ball			
+absent	Boleh		Ability			
+absent	Book	Buku	Book			
+absent	Buak ari	Ribut petir	Storm			
+absent	Buang pelambey	Ajak	Invite			
+absent	Bubok	Anak udang geragau	Baby Shrimp (geragau shrimp)			
+absent	Bubus	Tembus	Leak out			
+absent	Bujat	Memjengkelkan	Annoying			
+absent	Bukan		Not			
+absent	Bunga api		Fireworks			
+absent	Buntuk	Buruk	Rotten			
+absent	Burok	Buruk	Bad; rotten			
+absent	Cali	Lawak	Funny			
+absent	Campo	Campur	Mix			
+absent	Can	Kekasih	Lover; Boyfriend; Girlfriend			
+absent	Cekaq	Cekik	Strangle			
+absent	Celen	Cabar	Challenge			
+absent	Cepat		Quick			
+absent	Ceredit	Bijak; Banyak cakap	Smart; Talkative			
+absent	Cerey		Divorce			
+absent	Cerpu	Garfu	Fork			
+absent	Cia	Belanja	Treat (buy something); Treat			
+absent	Coklet	Coklat	Chocolate			
+absent	Congek	Mudah menangis	Cry baby			
+absent	Cuak		Fear			
+absent	Cuan	Acuan	Mould			
+absent	Cun		Exact			
+absent	Cun cun	Tepat; Betul	Right; Exactly			
+absent	Dagin	Daging	Meat			
+absent	Daguk		Jaw			
+absent	Dak ya	Mereka itu	They; Those people			
+absent	Daq	Kahak	Phlegm			
+absent	Dari		Than			
+absent	Datang		Arrival; Come			
+absent	Debah	Bawah	Below; Under			
+absent	Dedey	Sidai	Hang out to dry			
+absent	Dekat	Hampir	Near; close			
+absent	Dereb		Drive			
+absent	Diam	Tinggal (tempat); Tinggal	Stay (place); Live; Quiet			
+absent	Diat	Tengok	Look			
+absent	Dibah	Bawah	Below; Under; Down			
+absent	Dindin		Wall			
+absent	Dirik pun	Sendiri	Own			
+absent	Dolok	Dulu; Dahulu	Sometime ago; First			
+absent	Drebing		Driving			
+absent	Driving		Driving			
+absent	Dudi	Akhir	Last			
+absent	Duit		Money			
+absent	Ekot	Ikut	Follow			
+absent	Embak sekali		Include			
+absent	Empesut	Sejenis ikan lumba lumba; Empesut (Dolphin)	Irrawaddy Dolphin			
+absent	Empun	Punya	Own			
+absent	Encarik		Look for			
+absent	Encedol	Tersembul	Protruding			
+absent	Encoey	Terkeluar	Protruding			
+absent	Encuri		Steal			
+absent	Engkah	Letak	Put			
+absent	Enjok	Hulur	Give; Pass			
+absent	Entam	Hentam; Akibat	Hit; Cause			
+absent	Entingal	Degil	Headstrong			
+absent	Epol		Apple			
+absent	Esmu	Seri Muka	Radiance (face)			
+absent	Gadong	Hijau	Green			
+absent	Gaji		Pay (wage); Wage			
+absent	Gambong	Tak sedar diri	Stuck up			
+absent	Gayong	Cebok	Wash oneself after the toilet			
+absent	Gelas	Gelas	Glass			
+absent	Geley geley	Baring baring	Lie down			
+absent	Gelik	Geli	Disgusted			
+absent	Gia	Macam itu; Begitu	Like that			
+absent	Gik	Lagi	More			
+absent	Gilak	Sangat	Very			
+absent	Ginyak	Kunyah	Chew			
+absent	Gondol	Botak	Bald			
+absent	Gulabatu		Candy			
+absent	Guntin	Gunting	Scissors			
+absent	Guro	Gurau	Joke			
+absent	Ibey	Pimpin (tangan)	Holding hands			
+absent	Iboh	Tidak Payah; Jangan	No need to; Dont			
+absent	Idar	Giliran	Turn			
+absent	Idup		Life			
+absent	Ilek	Rehat	Chill; Relax			
+absent	Inggut	Bergerak	Move			
+absent	Ipak	Intip	Spy			
+absent	Irit		Drag			
+absent	Itam	Hitam	Dark; Black			
+absent	Jaik akal	Penipu	Con; Tricky			
+absent	Jaik ati	Sedih	Sad			
+absent	Jaik tubuh	Gemuk	Fat			
+absent	Jak	Saja; Hanya	Just; Exactly; Only			
+absent	Jaoh		Far			
+absent	Jejap	Jatuh (airmata)	Teary eyes			
+absent	Jeles		Jealous			
+absent	Jeman	Zaman	Period (time)			
+absent	Jenaka		Funny; Joke			
+absent	Jeraya besar		Highway			
+absent	Jeraya masuk		Access			
+absent	Jereki	Rezeki	Fortune			
+absent	Juak	Juga	Too; Also			
+absent	Juh	Jom	Lets go			
+absent	Juh lah		Come on			
+absent	Jumpa		Meet			
+absent	Jungo	Muncung (mulut)	Mouth			
+absent	Kamek urang empun		Ours			
+absent	Kandang		Cage			
+absent	Kasar		Rough			
+absent	Kedak ya juak		So-so			
+absent	Kedei Roti		Bakery			
+absent	Kelaie	Bergaduh	Fighting			
+absent	Kelak sikit		A bit Later			
+absent	Kemaik	Kotor	Dirty			
+absent	Kembang aek lior	Loya	Nausea			
+absent	Kemintin	Kening	Eyebrow			
+absent	Kempang ati	Sampai hati	Cruel; Heartless			
+absent	Keramus	Cakar	Scratch (violently)			
+absent	Kerin	Kering	Dry			
+absent	Ketel		Kettle			
+absent	Kiak Kaong	Terpekik terlolong	Shouting			
+absent	Kibar	Lempar	Throw			
+absent	Kinek		Immediate			
+absent	Kinek kinek	Sekarang juga	Immediately; Now			
+absent	Kitak orang empun		Yourselves			
+absent	Kiut		Cute			
+absent	Kobek	Jelir lidah	Stick out ones tongue			
+absent	Kojol	Mati	Die			
+absent	Kongang	Larat	Able; Capable; Ability			
+absent	Konok	Konon	Reputedly			
+absent	Kosong		Empty; Zero			
+absent	Koto	Kotor	Dirty			
+absent	Kueh		Bakery			
+absent	Kunin		Yellow			
+absent	Kuroh	Dengkur	Snore			
+absent	Kusal	Gosok gosok	Rub			
+absent	Kuyut	Selalu di ingat	Always remembered			
+absent	Laga	Luas	Spacious			
+absent	Laju	Cepat	Quick			
+absent	Laju laju		Quickly			
+absent	Lalek	Peduli	Pay attention			
+absent	Lalo		Spinster			
+absent	Lambat		Late			
+absent	Lambey	Lambai	Wave			
+absent	Lansang	Bau busuk	Awfull smell			
+absent	Lantey	Lantai	Floor			
+absent	Lantoh	Bau hanyir	Fishy smell			
+absent	Lanyek	Lebah	Bees			
+absent	Laut		Sea			
+absent	Layap	Termenung	Dreamy			
+absent	Lebih		More			
+absent	Lebor	Basah	Wet			
+absent	Legik	Kurus; Kurang isi	Skinny			
+absent	Lejuk	Bosan	Bored			
+absent	Lekak ya		Then			
+absent	Lekas	Cepat	Fast			
+absent	Lembik		Limp			
+absent	Lembut		Gentle			
+absent	Lemenet	Minuman Soda Ringan	Soda Drinks			
+absent	Lempah	Lauk	Dish			
+absent	Lempam	Lemau	Stale			
+absent	Lengis	Licin	Finished up			
+absent	Lepas		After			
+absent	Lesin	Bau air kencing	Urine odor			
+absent	Letik	Melekit lekit	Sticky			
+absent	Lingo lingo	Toleh	Head turning ( to see)			
+absent	Lintuk	Lemah	Weak			
+absent	Liut	Liat	Rubbery			
+absent	Loba	Melampau	Overreacting; Exaggerate; Over			
+absent	Lomadak	Belum	Not yet			
+absent	Lombot	Lambat	Late; Slowly			
+absent	Lompat		Jump			
+absent	Loyar	Sembang	Chat			
+absent	Luguk	Dahi luas	Wide forehead			
+absent	Lulus		Pass			
+absent	Luncit	Runcing	Sharp end			
+absent	Maap		Sorry			
+absent	Mala	Asyik asyik	Keep on			
+absent	Mampah	Kotor	Unhygienic			
+absent	Mansang	Ke depan	Move forward			
+absent	Marak (api)		Fiery			
+absent	Masa		Time			
+absent	Mehey	Pengotor	Messy; Unhygienic person			
+absent	Melancit	Terpercik	Splatter			
+absent	Meletak		Lay			
+absent	Melobon	Makan banyak	Eat a lot			
+absent	Menar	Benar; Betul	Truth			
+absent	Mengambor	Bersepah	Messy			
+absent	Menjus	Muka masam	Wry face			
+absent	Menoes	Comot	Messy			
+absent	Menseya	Zaman dulu	Period; Old time			
+absent	Mensia		Ancient			
+absent	Meradang	Marah	Irate			
+absent	Meransak	Bersin	Sneeze			
+absent	Merati	Perhati	Stare; Look			
+absent	Merentah	Meragam	Cranky			
+absent	Merik malu		Embarrassed			
+absent	Merik Semangat		Encourage			
+absent	Merinsak	Sengsara	In misery			
+absent	Merumput	Memotong rumput	Mowing the lawn			
+absent	Miak	Budak	Kid			
+absent	Miak Ompuan		Girl			
+absent	Milus	Kecik	Small			
+absent	Mintak		Request			
+absent	Mirah	Merah	Red			
+absent	Mirah raba	Merah tua	Maroon			
+absent	Mok	Mahu	Want			
+absent	Mongan	Perut	Tummy			
+absent	Monyeng	Selekeh; Comot	Messy; Grimy			
+absent	Moto	Kereta	Car			
+absent	Motosikal	Motor; Motorsikal	Motorcycle; Motocycle			
+absent	Mudahan		May			
+absent	Mupus	Tersembur (air dari mulut)	Water spurts out (from the mouth while drinking or laughing)			
+absent	Ndak alah alah	Tidak sudah sudah	Always; Constantly			
+absent	Negok	Meneguk air	Drink			
+absent	Neguk	Menduga kesabaran	To test one's patience			
+absent	Nemiak	Budak	Kid			
+absent	Nenong	Tenung	Stare; Deep thinking			
+absent	Ney	Mana	Where; Which			
+absent	Ngaco		Disturb; Interrupt			
+absent	Ngarut Ngeriput	Mengarut	Blabbering; Rambling			
+absent	Ngelala	Kenal	Recognise			
+absent	Ngelayo	Merewang	Going around somewhere			
+absent	Ngelek	Mengelak	Avoid			
+absent	Ngereco	Merapu	Babbling			
+absent	Ngerenyang	Banyak cakap	Talkative			
+absent	Ngerepak	Membebel	Nagging; Nangging			
+absent	Ngereyot	Geram	Annoyed			
+absent	Ngersik	Merengek	Acting up (for something); Nagging			
+absent	Ngesak Ati	Menyakitkan hati	Annoying			
+absent	Ngesep	Berhias	Doll up			
+absent	Ngesor	Menunjuk	Show off			
+absent	Ngeteng	Seluar singkat	Hem length (too short)			
+absent	Ngintu	Jaga	Taking care (someone, house)			
+absent	Ngipak	Mengintai	On the lookout			
+absent	Nguap	Menguap	Yawn			
+absent	Ngubat		Cure			
+absent	Ngulu	Teman	Accompany			
+absent	Ngumpol		Gather			
+absent	Niat	Tengok	Look			
+absent	Nikah		Wedding			
+absent	Ninek		Granddad; Grandma			
+absent	Ningas	Mencari cari	Query			
+absent	Nok ney		Which			
+absent	Nok sidak		Their, Theirs			
+absent	Nok Ya	Itu	That			
+absent	Nombor		Number			
+absent	Nomo		Number			
+absent	Nun	Sana	There			
+absent	Nyabut	Cabut	Pull out			
+absent	Nyakat	Usik	Tease			
+absent	Nyalut	Salut	Coat			
+absent	Nyerin	Nyaring	Loud			
+absent	Nyerita	Cerita	Tell a story; chat			
+absent	Nyeruduk	Tersembam	Slumped			
+absent	Nyeruk	Menjemput	Invite			
+absent	Nyesah baju	Mencuci baju	Laundry			
+absent	Nyesal	Kesal	Regret			
+absent	Nyindin	Merapati seorang untuk dapatkan sesuatu	Cozy up to someone to get something			
+absent	Off		Off			
+absent	Oh tedah	Kesiannya	oh pity			
+absent	Olahan	Perangai	Behaviour			
+absent	Oleh	Dapat	Obtain; Gain; Get			
+absent	Olehan	Akibat	Because of; as a result			
+absent	Ompuan	Perempuan	Female			
+absent	Orang laki	Lelaki	Male; Man			
+absent	Orang Puan	Perempuan	Female; Woman			
+absent	Osaha		Effort			
+absent	Padahkan	Katakan	Tell; say			
+absent	Pak menakan		Uncle			
+absent	Pak Saok	Penjahat	Villain; Bad guy			
+absent	Pakey		For; Wear			
+absent	Pam		Pump			
+absent	Pande	Pandai	Clever			
+absent	Pangkuk	Riba	to sit on the lap			
+absent	Pass		Pass			
+absent	Pateh	Terlatih; Jinak	Well trained			
+absent	Pekak		Deaf & Dumb			
+absent	Pelantin	Terpelanting; Tergolek	Sent rolling			
+absent	Pelentey	Gurauan; Acah acah	Joke			
+absent	Pelesu	Palsu	Fake			
+absent	Pelik		Odd			
+absent	Pemek	Hidung tidak mancung	Flat nose; Flat (nose)			
+absent	Pencat	Tempang	Limping			
+absent	Penin palak		Headache			
+absent	Penitah	Orang yang asyik perintahkan orang lain buat kerjanya	A person who always delegate work			
+absent	Perangey		Habit			
+absent	Perauk	Sampan	Small boat			
+absent	Periksa		Exam			
+absent	Perpo	Mangga pintu	Padlock			
+absent	Pesoq	Tembus	Through			
+absent	Petiais		Refrigerator			
+absent	Piker		Thought			
+absent	Piluk ati		Sad			
+absent	Pintu masuk		Entrance			
+absent	Pirin	Piring	Saucer			
+absent	Pisan	Pengsan	Pass Out			
+absent	Pisan Perangai	Pengsan	Perangey			
+absent	Podar	Bedak	Powder			
+absent	Pongah	Sombong	Very Stuck up			
+absent	Ponteng		Absent			
+absent	Potong		Cut			
+absent	Puan	Pasu	Vase			
+absent	Puang	Kosong	Empty			
+absent	Pugey	Ilmu syirik untuk memikat	Love spell; Black magic			
+absent	Pulang mansang	Ulang Alik	To and fro			
+absent	Pun	Hujung	At the end			
+absent	Punduk api	Bara api; Hitam pekat	Charcoal; Blackest black			
+absent	Pusin		Turnaround			
+absent	Putit	Kutip	Pick up (item)			
+absent	Rah		At; Towards			
+absent	Rajin		Dilligent			
+absent	Ranggat	Garang	Too Firm; Fierce like (not polite)			
+absent	Rangkum		Include			
+absent	Rantey		Necklace			
+absent	Rega		Price			
+absent	Rega bedil	Mahal	Expensive			
+absent	Renyok	Tak Licin	Not smooth			
+absent	Reti		Mean			
+absent	Retok	Berlubang lubang (bekas jerawat)	Scarred face (pimple scars)			
+absent	Rias	Hias	Dress up			
+absent	Rindok	Suka	Like			
+absent	Rindok ati	Senang hati	Happy; content			
+absent	Rindok nangga		Attractive			
+absent	Rintas	Rentap	Snatch			
+absent	Riso	Risau	Worry			
+absent	Riya	Dulu	Once; Before			
+absent	Rona	Warna	Colour			
+absent	Ruchey	Hancur	Messy			
+absent	Rumbak	Tarik kuat kuat	Hair pulling; Cat fight			
+absent	Rungak	Gigi rongak	Toothless			
+absent	Salah		Error			
+absent	Sampe		Reach			
+absent	Sampey		Arrive; Arrival; Until			
+absent	San Buyan	Amat Terkejut; Takut	Really Frightened; Shocked			
+absent	Sangsut	Tersasul	Inadvertantly			
+absent	Sapa sapa jak		Whoever			
+absent	Saruk	Tersasul	Inadvertantly; Error			
+absent	Saya		Me			
+absent	Sayap		Wing			
+absent	Se enggak enggak ati	Sepenuh hati	Wholeheartedly			
+absent	Segal	Kerana	Because			
+absent	Sekda	Tidak Ada	Not Available			
+absent	Selauk	Terseliuh	Sprained			
+absent	Semadi	Daripada	From; Instead			
+absent	Semayang		Pray			
+absent	Senang ati		Happy			
+absent	Sendat	Tidak muat	Ill - fitting			
+absent	Sendat idong	Selesema; Resdung	Flu; Sinus			
+absent	Sendik	Sebelah	Next to			
+absent	Sengaja		Deliberate			
+absent	Senggaut	Nak cepat; Gesa gesa	in a hurry			
+absent	Sep	Almari	Cabinet			
+absent	Sepanjang		Along			
+absent	Seragam		Uniform			
+absent	Seranto ranto	Sepanjang	Along			
+absent	Serawo	Panggil	Call			
+absent	Serda	Sendawa	Burp			
+absent	Sesar	Udang kecil	Small shrimp			
+absent	Sesat		Lost			
+absent	Setegal	Kerana	Because			
+absent	Sia sitok	Sana sini	Here and there			
+absent	Siboh	Tak payah	No need; Do not			
+absent	Sigek	Satu	One			
+absent	Sigong	Menyiku	To nudge someone			
+absent	Sik Datang		Absent			
+absent	Sik duli		Ignore			
+absent	Sik jauh		Near			
+absent	Sik kalak	Tidak Pernah	Never			
+absent	Sik mungkin		Impossible			
+absent	Sik Terkaber	Tak Larat	Too weak to; unable			
+absent	Simbak	Tarik (kain)	Pull (cloth)			
+absent	Simbor	Curah (air)	Splash (water)			
+absent	Siney siney jak		Wherever			
+absent	Singit	Senget	Slanting			
+absent	Sinsin	Singsing; Lipat	Roll up (sleeves , pants)			
+absent	Siram	Tujah				
+absent	Sisir	Sikat	Comb			
+absent	Sloa dalam		Underwear			
+absent	Sloar		Pants			
+absent	Sloar Puntong	Seluar pendek	Shorts			
+absent	Soalan		Question			
+absent	Sor	Tunjuk	Show			
+absent	Sorang	Sendiri	Alone			
+absent	Suak	Beri	Give			
+absent	Suatu ari kelak		Someday			
+absent	Suk	Suka	Like; Fun; Keen			
+absent	Suka		Keen			
+absent	Sunyek	Sunyi	Quiet			
+absent	Susah		Hard			
+absent	Susey	Bercerita	Chit Chat (Gossip)			
+absent	Susur tubuh	Badan kurus	Lose weight			
+absent	Tadik	Tadi	Just now; earlier			
+absent	Takut		Fear			
+absent	Tambah		Gain			
+absent	Tauk	Tahu	Know			
+absent	Tebat	Tutup	Cover			
+absent	Tekoyong	Siput	Snail			
+absent	Telefon		Call			
+absent	Temedak	Cempedak	Jackfruit			
+absent	Temuay	Tetamu	Guest			
+absent	Tengada	Tiba tiba	Suddenly			
+absent	Tengelup	Terbenam	Dodge; Duck			
+absent	Tentang		About			
+absent	Tepon	Telefon	Telephone			
+absent	Terbalit		Reverse			
+absent	Teregak	Sejenis gaya	one kind of style			
+absent	Tereka	Setereka				
+absent	Tergasak gasak	Tak senang duduk	Restless			
+absent	Terhaler haler	Seluar londeh	low rise pants			
+absent	Terkaber	Mampu; Larat	Capable			
+absent	Terkam		Grab			
+absent	Terkapak kapak	Gagap	Stutter			
+absent	Terkenjit-kenjit	Gedik; Lincah	Jaunty; Attention seeking			
+absent	Terkesik kesik	Merengek	Crying; Moaning			
+absent	Terusuk	Tersembam jatuh	Fall down			
+absent	Tiap Ari		Daily			
+absent	Tibak baok	Sebarang; Cincai	Slipshod; Care less			
+absent	Tigak	Sepak	Kick			
+absent	Timpak	Tindih	Stacked; Overlapped			
+absent	Tinggalkan		Leave			
+absent	Tinggi		High			
+absent	Tinjak	Pijak	Step on			
+absent	Tok		This			
+absent	Tola	Tuala	Towel			
+absent	Tua		Old			
+absent	Tudung sarang	Tudung saji	Food cover			
+absent	Tujah		Pour			
+absent	Tukuk	Ketuk	Hit			
+absent	Tulong lok		Please			
+absent	Tutupkan		Off			
+absent	Tuyuk	Bodoh	Dumb			
+absent	Udah	Sudah; Telah	Already			
+absent	Udik	Lagi	Again			
+absent	Ugak ugak	Besar	Big			
+absent	Ughup	Abjad				
+absent	Ujan	Hujan	Rain			
+absent	Unah	Rasa	After taste			
+absent	Undang	Udang	Prawn			
+absent	Undur		Reverse			
+absent	Uniform		Uniform			
+absent	Unik		Unique			
+absent	Upah		Reward			
+absent	Urang		Person			
+absent	Urang laki	Lelaki	Male			
+absent	Urang Mude	Hero	Hero			
+absent	Urang Puan	Perempuan	Female			
+absent	Urup	Abjad				
+absent	Utang	Hutang	Debt			
+absent	Uyut	Buaian anak kecil	Baby Cradle; Swing			
+absent	X Igek	X Biji (ketul)	X Pieces			
+absent	Ya jak		Just (that)			
+absent	Yalah		It is			
+absent	Zaman mensia	Zaman dulu2	A long time ago			
+agree	Aek	Air	Water	water	air	
+agree	Ambik	Capai	Take	to take	mengambil	
+agree	Angol	Pening Kepala; Loya	Headache; Nausea	dizzy; headache	pening kepala	
+agree	Anok	Kutuk; Caci	Talk badly about (something); Scold	to scold, to tease	marah, ejek	
+agree	Anton	Lambat	Move too slow; Slowly	slow	lambat	
+agree	Aok	Ya	Yes	yes	ya	
+agree	Apa		What	what	apa	
+agree	Aritok	Hari ini	Today	today	hari ini	
+agree	Asuk	Anjing	Dog	dog	anjing	
+agree	Bait	Baik	Good; Fine	good	bagus	
+agree	Belagu		Sing	to sing	menyanyi	
+agree	Belon	Kapal terbang	Aeroplane; Plane	aeroplane	kapal terbang	
+agree	Berambeh	Bermalam	Stay overnight	to stay overnight, stopover	bermalam	
+agree	Berekot	Berlari	Run	to run	berlari	
+agree	Beresi	Bersih	Clean; Neat	clean	bersih	
+agree	Berik	Bagi	Give	give	memberi	
+agree	Berisik		Have	to have	ada, memiliki	
+agree	Bila		When	when	bila	
+agree	Bilit mandik		Bathroom	bathroom, bathing place	bilik mandi	
+agree	Boyak	Buaya	Crocodile	crocodile	buaya	
+agree	Bulak	Bohong	Bluff; Fake; False; Lie	lie	tipu; bohong	
+agree	Bulu mansu	Kening	Eyebrow	eyebrow	kening	
+agree	Cabik	Cili	Chilli	chilli	cili	
+agree	Cangkir	Gelas	Glass; Cup	cup	cawan	
+agree	Cayak	Percaya	Trust	to believe, to trust	percaya	
+agree	Cerita	Cerita	News	news	berita	
+agree	Dalam		Deep; Inside	inside	dalam	
+agree	Gago	Sibuk	Busy	busy; busybody	sibuk	
+agree	Gerek	Kekasih; Teman lelaki; wanita	Boyfriend; Girlfriend	partner, boyfriend, girlfriend	teman lelaki, teman wanita	
+agree	Goreng		Fry	fry	goreng	
+agree	Gugok	Jatuh	Fall down; Fall	to fall	jatuh	
+agree	Gurin	Baring	Lie down; Lying	lay down	berbaring	
+agree	Ijo	Hijau	Green	green	warna hijau	
+agree	Isok	Esok	Tomorrow	tomorrow	esok	
+agree	Jaik	Jahat; Hodoh	Bad; Ugly; Evil; Mean (attitude)	ugly, not pretty	hodoh	
+agree	Jamban	Bilik air	Toilet	toilet	tandas	
+agree	Kacak	Cantik	Beautiful; Attractive; Handsome; Nice; Pretty	beautiful, pretty	cantik	
+agree	Kamah	Kotor	Dirty	dirty	kotor	
+agree	Kamek	Saya; Aku	I; Me	I, me	saya, aku	
+agree	Kamek empun		Mine; Myself	mine	saya punya	
+agree	Kecik		Small	small (size)	kecil	
+agree	Kedak	Macam; Seperti	Like; Sort of; Seem	like (as)	seperti; macam	
+agree	Kemeh	Kencing; Buang air kecil	Pee	urine	kencing	
+agree	Kenak	Kenapa; Mengapa	Why	why	kenapa, mengapa	
+agree	Kepak	Letih; Penat	Tired	tired	letih, penat	
+agree	Keribang	Ubi keledek	Sweet potatoes	sweet potato	keledek	
+agree	Kesak	Kerengga	Weaver ant	fire ant	semut api	
+agree	Kinek tok	Sekarang ini; Sekarang	Now; Nowadays	now	sekarang	
+agree	Kitak	Awak	You	you (formal, singular)	kamu, awak	
+agree	Kitak orang	Awak semua	All of you	you (plural)	kamu orang	
+agree	Ladin	Pisau	Knife	knife	pisau	
+agree	Laki		Husband	husband	suami	
+agree	Lang	Pintu	Door	door	pintu	
+agree	Lawa	Sombong	Stuck up	arrogant	sombong	
+agree	Lelah	Penat	Tired	tired	penat	
+agree	Lepeh	Lipas	Cockcroach	cockroach	lipas	
+agree	Leput	Pengsan	Fainted	to faint	pengsan	
+agree	Leyak	Halia	Ginger	ginger	halia	
+agree	Limo	Limau	Orange; Lime	lime	limau	
+agree	Limpas	Lalu	Pass by	to cross, to pass	lintas, lulus	
+agree	Madah	Beritahu; Cakap	Indicate; Say	to tell	beritahu	
+agree	Manas	Marah	Angry; Irate	angry	marah	
+agree	Manok	Ayam	Chicken	chicken	ayam	
+agree	Marek	Kelmarin	Yesterday	yesterday	semalam	
+agree	Mun	Jika	If	if	kalau; jika	
+agree	Nangis		Cry	to cry	menangis	
+agree	Nasik	Nasi	Rice	rice (cooked)	nasi	
+agree	Nekik	Panjat; Naik	Climb	to climb, to hike	panjat, mendaki	
+agree	Nemu		Meet	meet	jumpa	
+agree	Nerimak	Terima	Receive; Accept	to receive	menerima	
+agree	Nganok	Marah; Umpat	Scold	angry	marah	
+agree	Nulis		Write	to write	menulis	
+agree	Nunggu		Wait	to wait	menunggu	
+agree	Nya	Ia	It; She	he, she, it	dia	
+agree	Nyaman	Sedap	Delicious; Yummy	delicious	sedap	
+agree	Nyimpan	Simpan	Keep	to keep	menyimpan	
+agree	Paham		Understand	to understand	faham	
+agree	Palak	Kepala	Head	head	kepala	
+agree	Paloi	Bodoh	Silly; Stupid	stupid	bodoh	
+agree	Paluk	Pukul	Hit	beat	pukul	
+agree	Pegi	Pergi	Go	go to	pergi	
+agree	Penjan	Tingkap	Window	window	tingkap	
+agree	Polah	Buat	Do; Make	to do	buat	
+agree	Pusak	Kucing	Cat	cat	kucing	
+agree	Pusuk	Ikan bilis	Anchovies	anchovy	ikan bilis	
+agree	Rumah		Home / House	house	rumah	
+agree	Sapa	Siapa	Who	who	siapa	
+agree	Sapik	Suap	Spoon feed	spoon feed	menyuap	
+agree	Semangka	Tembikai	Watermelon	watermelon	tembikai	
+agree	Sia	Sana	There	there	di sana	
+agree	Sidak	Mereka	They; Other; Them	they, them	mereka	
+agree	Sik	Tidak; Tak	No	no	tidak	
+agree	Siney	Mana; Di mana	Where	where	di mana	
+agree	Sinun	Sana; Situ	There	over there	di sana	
+agree	Sitok	Sini	Here	here	di sini	
+agree	Sungei		River	river	sungai	
+agree	Suntong	Sotong	Squid	squid	sotong	
+agree	Supan	Malu	Shy; Embarrass	shy	malu	
+agree	Tandah	Biar	Let it be	to let, to permit	membiarkan	
+agree	Tapak	Pinggan	Plate	plate	pinggan	
+agree	Tetak	Ketawa	Laugh	to laugh	ketawa	
+agree	Tido	Tidur	Sleep	to sleep	tidur	
+agree	Tikam		Throw	to throw	buang	
+agree	Tunggah	Panggil	Call	call; summon	panggil	
+agree	Tunok	Bakar	Burn; Roasted; Baked	to burn, to roast	membakar	
+agree	Uras	Sampah	Rubbish; Garbage; Trash	rubbish	sampah	
+agree	Utak	Otak	Brain	brain	otak	
+near	Akan		Will	eat	makan	makan
+near	Angit	Bau busuk ketiak	Body odor	dizzy, bored, confused	pening; bosan	angoi
+near	Asok	Pakai (baju)	Put on (Clothes)	yes	ya	aok
+near	Bakok	Bodoh	Stupid	basket	bakul	bakak
+near	Balit	Balik; Kembali	Back; Return	good	bagus	bait
+near	Banyak		Many	to ask	tanya	nanyak
+near	Baok	Pukul	Hit	yes	ya	aok
+near	Baru		New	shoulder	bahu	bau
+near	Basak	Basah	Wet	to cook	masak	embasak
+near	Bebek		Deaf & Dumb	papaya	betik	betek
+near	Bebulak		Lying	liar	pembohong	pebulak
+near	Bena		Real	deaf	pekak	bengai
+near	Bengal	Pekak	Deaf	deaf	pekak	bengai
+near	Berayan	Tercicir	Scattered about; Lost	toilet	tandas	beran
+near	Berkasik	Bersin	Sneeze	to have	ada, memiliki	berisik
+near	Berlinyok	Berminyak	Oily	oily	berminyak	linyok
+near	Bersi		Clean	clean	bersih	beresi
+near	Bertemu		Meet	to meet	berjumpa	betemu
+near	Biak	Muda	Young	monitor lizard	biawak	biawak
+near	Bulat		Round	in three days time		tulat
+near	Cacak	Tikam	Stab	beautiful, pretty	cantik	kacak
+near	Cakah	Cergas	Active; energetic	active	aktif	cakeah
+near	Cangker	Gelas	Cup	cup	cawan	cangkir
+near	Cepak	Tompok kotoran	Stain	tired	letih, penat	kepak
+near	Dekik	Panjat	Climb	to climb, to hike	panjat, mendaki	nekik
+near	Denga		Hear; Listen	hear	dengar	dengai
+near	Dengan		With	upper arm	lengan	lengan
+near	Derang	Panas	Heat; Hot	lukewarm	suam	dereang
+near	Dipolah		Made	to do	buat	polah
+near	Eksiden		Accident	arrogant	sombong	eksen
+near	Embak	Bawa	Bring	to bring, to take	bawa	ngembak
+near	Encoba		Try	to try	cuba	coba
+near	Engkodok	Ungu	Purple	nape of neck	belakang leher	tengkok
+near	Eran	Hairan	Puzzled	toilet	tandas	beran
+near	Gaok	Garang	Fierce	yes	ya	aok
+near	Geruk	Leher	Neck; Throat	partner, boyfriend, girlfriend	teman lelaki, teman wanita	gerek
+near	Giney	Bagaimana; Macam mana	How	where	di mana	siney
+near	Gulin	Bantal peluk	Bolster	lay down	berbaring	gurin
+near	Ilang	Hilang	Lost; Disappear; Loss	door	pintu	lang
+near	Itok	Asyik ingat	Stuck Thoughts	here	di sini	sitok
+near	Itong	Hitung	Count	nose	hidung	idong
+near	Jait	Jahit	Sew	to sew	jahit	njait
+near	Jangkak	Jangka	Estimate	jackfruit	nangka	nangkak
+near	Jerak	Insaf	Deterrent	monkey	monyet	kerak
+near	Jeraya	Jalanraya	Road; Street	road	jalan raya	jerayo
+near	Kalas	Merah Jambu	Pink	jetty	jeti	kalan
+near	Kamek urang		Our; We	we, us	kita, kami	kamek orang
+near	Karan	Elektrik	Electric; Electric, Electricity	jetty	jeti	kalan
+near	Kaus	Wap	Steam	you (informal, singular)	kamu, awak	kau
+near	Kaut	Angkut	Scoop	you (informal, singular)	kamu, awak	kau
+near	Kebor	Tepuk (Kerusi / Tilam)	Dust off (bed)	buffalo	kerbau	kerbo
+near	Kedey		Store	shop, shophouse	kedai	kedei
+near	Kelaka	Bercakap	Talk; Speak	to speak	bercakap	kelakar
+near	Kelat	Mengantuk	Sleepy	to cut	potong	kerat
+near	Keras		Hard	to work	bekerja	kerja
+near	Kerek	Kiri	Left	monkey	monyet	kerak
+near	Kereyak	Kotor	Dirty	monkey	monyet	kerak
+near	Kerna	Kerana	Because	to work	bekerja	kerja
+near	Keruk	Keras	Stiff	monkey	monyet	kerak
+near	Kihak	Selekeh	Messy looking	you (formal, singular)	kamu, awak	kitak
+near	Kitak mpun		Yours	your (formal)		kitak empun
+near	Klua		Out	outside	luar	lua
+near	Kupak	Kupas	Peel	tortoise	kura kura	kurak
+near	Lain		Unique	knife	pisau	ladin
+near	Lamak		Old	five	lima	limak
+near	Lanang	Buaian	Swing	door	pintu	lang
+near	Lango	Lalat	Fly	hut	pondok	langko
+near	Lantak	Langgar	Knock down	porcupine	landak	landak
+near	Lapa	Lapar	Hungry	what	apa	apa
+near	Lapit	Lapik	Wrap	in four days time		lupit
+near	Layak	Bayang bayang	Shadow	prawn	udang	payak
+near	Lebeh	Comel	Cute	cockroach	lipas	lepeh
+near	Lebor Laor	Basah Kuyup	Drenched (wet)	wet (soaked)	basah kuyup	lebor lao
+near	Lecah	Lembap	Moist	to break	memecahkan	mecah
+near	Lekak	Siap; Lepas	Done; After	ginger	halia	leyak
+near	Lemari	Almari	Cupboard; Wardrobe	cupboard	almari	mari
+near	Licak	Lembut	Soft	five	lima	limak
+near	Loa Bib	Seluar dalam	Panties	underwear	seluar dalam	loa bip
+near	Lukak		Wound	badger	luak	luak
+near	Lukus	Melecur	Burnt (skin)	bald	botak	lukur
+near	Lupak		Forget	badger	luak	luak
+near	Macam		Seem	to read	membaca	maca
+near	Mak menakan		Aunty	want to eat	mahu makan	mok makan
+near	Makanan		Food	eat	makan	makan
+near	Maok	Mahu; Hendak; Nak	Want	chicken	ayam	manok
+near	Marak	Berkepul kepul (api)	Fiery (fire)	yesterday	semalam	marek
+near	Masak		Cook	to cook	masak	embasak
+near	Medah	Lembap	Moist	pity	kasihan	tedah
+near	Molah	Buat	Do; Make	to do	buat	polah
+near	Mudak		Young	to open	buka	mukak
+near	Muyas	Serabai	Messy looking	angry	marah	muras
+near	Nanak	Terlebih manja	Spoilt	to ask	tanya	nanyak
+near	Nandah	Biar	Let it be	to let, to permit	membiarkan	tandah
+near	Nang	Memang	Certainly; Indeed	to explain	menerangkan	nerang
+near	Nenga	Dengar	Listen	to hear, to listen	mendengar	nengar
+near	Ngadang	Adang	Block; obstruct	to serve food and drink	menghidangkan	ngidang
+near	Ngajak	Ajak	Invite	to teach, to advise	mengajar	ngajar
+near	Ngaler	Mewarna	Colouring	to move, to transfer	memindahkan	ngaleh
+near	Ngantok	Mengantuk; Mengantok	Sleepy	angry	marah	nganok
+near	Ngasi		Effective	rice (cooked)	nasi	nasik
+near	Ngereh	Bawa bersama	To bring together	annoying, to show off	menyampah, mengada-ngada	ngegeh
+near	Ngerisang	Muka susah; sedih	Sad; Worried face	to explain	menerangkan	nerang
+near	Ngigo	Bercakap dalam tidur	Talking while asleep	calculate	mengira	ngiro
+near	Nginang	Memelihara	Taking care of (animals)	to lose	menghilangkan	ngilang
+near	Ngurin		Lay	lay down	berbaring	gurin
+near	Ningar	Bising	Noisy	to hear, to listen	mendengar	nengar
+near	Nior	Kelapa	Coconut	coconut	kelapa	nyior
+near	Nya mpun		Herself; Himself	his, hers	dia punya	nya empun
+near	Nyeluak	Loya	Nauseating	sarcasm	menyindir	nyelak
+near	Nyinggah	Tumpangkan	Drop off	to call	memanggil	nunggah
+near	Olah	Perangai	Behaviour	to do	buat	polah
+near	Padah	Beritahu	Inform; Say; Tell	to tell	beritahu	madah
+near	Pakei	Pakai	Wear	to use	menggunakan	makei
+near	Palit	Tempel; Calit	Spread	drain	longkang	parit
+near	Pandok	Pembakaran terbuka; Unggun api	Open burning	to burn (land)	membakar	mandok
+near	Pantey		Beach	beach	pantai	pantei
+near	Pasa	Bandar	Town; Market	after that	selepas itu	pas ya
+near	Pelan	Membela; Perlahan	Defend; Backing; Softly	stubborn	degil	melan
+near	Pengilan	Kenduri	Gathering (wedding)	to lose	menghilangkan	ngilang
+near	Penin	Pening	Headache	Monday	Isnin	senin
+near	Penyek	Kemek	Dented; Flat	sea turtle	penyu	penyuk
+near	Peremban	Perumpamaan	Old saying	frying pan	kuali	perempan
+near	Pigang	Pegang	Hold; Touch	waist	pinggang	pinggang
+near	Pirit	Lecek	Mashed	drain	longkang	parit
+near	Pisok	Pisau	Knife	tomorrow	esok	isok
+near	Puluk	Sapu	Apply (eg lotion)	anchovy	ikan bilis	pusuk
+near	Relak		Relax	soon	nanti	kelak
+near	Rengang	Bau air kencing	Urine odor	hornbill	kenyalang	enggang
+near	Sayo	Sayur	Vegetable	vegetable	sayur	sayoi
+near	Sepak		Kick	nervous	gementar	sepek
+near	Serut	Kesat; Tidak licin	Not smooth	stomach, tummy	perut	perut
+near	Sidak empun		Themselves	theirs	mereka punya	sidak nya empun
+near	Sidak nya pun		Themselves	theirs	mereka punya	sidak nya empun
+near	Sigat	Rajin	Dilligent	lion	singa	singa
+near	Sik akan		Never	do not have	tidak ada	sik ada
+near	Suduk	Sudu	Spoon	to trip over	tersungkur	susuk
+near	Sukut	Sudut	Corner	to fight physically	bergaduh	bukut
+near	Sungkey	Buka puasa; Berbuka puasa	Break fast	break fast	buka puasa	sungkei
+near	Taboh	Pukul	Hit	to keep, to save	simpan	taroh
+near	Tanak	Masak; Rebus	Cook; Boil	plate	pinggan	tapak
+near	Tandak	Menari	Dance	to let, to permit	membiarkan	tandah
+near	Tangga	Tengok; Lihat	Look; See	arm, hand	tangan	tangan
+near	Tanggak		Stairs	spoiled (child)	manja	langgoak
+near	Tangkap		Catch / Capture	to catch	menangkap	nangkap
+near	Tanyak		Ask	to ask	tanya	nanyak
+near	Tapok	Sembunyi	Hide	plate	pinggan	tapak
+near	Tapuk	Letak	Put (in)	plate	pinggan	tapak
+near	Tarit		Pull	drain	longkang	parit
+near	Tekak		Guess	to laugh	ketawa	tetak
+near	Telus	Keluar	Out	egg	telur	telua
+near	Temu	Jumpa	Found	to meet	berjumpa	betemu
+near	Terais	Jerit	Shout	to scream	menjerit	nerais
+near	Terimak		Receive; Wage	to receive	menerima	nerimak
+near	Tetaq	Tetak; Potong	Slash	to laugh	ketawa	tetak
+near	Tinggal		Left (item)	cousin	sepupu	tunggal
+near	Tulak		Push	in three days time		tulat
+near	Tulis		Write	to write	menulis	nulis
+near	Tulong		Assist; Help	to help	menolong	nulong
+near	Tunggu		Wait	to wait	menunggu	nunggu
+near	Unsak Anser	Serabai; Selekeh	Messy looking	messy	serabut	unsaansei

@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.Lifecycle
@@ -36,6 +37,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -55,16 +59,16 @@ private data class Tab(val route: String, val label: String, val icon: ImageVect
 // Route ids are kept from earlier phases where they still mean the same thing ("cards", "read", "speak").
 private val tabs = listOf(
     Tab("home", "Home", Icons.Outlined.Home),
-    Tab("cards", "Review", Icons.Outlined.Style),
+    Tab("cards", "Study", Icons.Outlined.Style),
     Tab("read", "Read", Icons.Outlined.MenuBook),
     Tab("speak", "Output", Icons.Outlined.Mic),
     Tab("watch", "Watch", Icons.Outlined.PlayCircleOutline)
 )
 
-private fun NavHostController.goTab(route: String) = navigate(route) { popUpTo("home"); launchSingleTop = true }
+private fun NavHostController.goTab(route: String) = navigate(route) { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true }
 
 /** Screens where the learner speaks into the microphone: the video pauses on entry and resumes after. */
-private fun isMicRoute(route: String?) = route != null && (route.startsWith("call/") || route.startsWith("topic/"))
+private fun isMicRoute(route: String?) = route != null && route.startsWith("topic/")
 
 @Composable
 fun FluvourRoot(vm: AppViewModel = hiltViewModel()) {
@@ -73,9 +77,11 @@ fun FluvourRoot(vm: AppViewModel = hiltViewModel()) {
     // Android 13+: the media notification needs this permission. Asked once, the first time a video is opened (no dialog if already decided).
     val askNotif = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     val hasVideo = playerVm.ui.collectAsStateWithLifecycle().value.item != null
+    val immersive by playerVm.immersive.collectAsStateWithLifecycle()   // landscape full-screen video: no tab bar
     LaunchedEffect(hasVideo) { if (hasVideo && Build.VERSION.SDK_INT >= 33) askNotif.launch(Manifest.permission.POST_NOTIFICATIONS) }
     val settings by vm.settings.collectAsStateWithLifecycle()
     val s = settings ?: return
+    SideEffect { app.fluvour.ui.art.ArtPrefs.enabled = s.art; app.fluvour.ui.art.ArtPrefs.reduceMotion = s.reduceMotion }
     FluvourTheme(Themes.byId(s.theme), s.mode, s.targetLang) {
         val nav = rememberNavController()
         val route = nav.currentBackStackEntryAsState().value?.destination?.route
@@ -88,8 +94,19 @@ fun FluvourRoot(vm: AppViewModel = hiltViewModel()) {
         val fg = remember { MutableStateFlow(true) }
         val eligible = remember { MutableStateFlow(false) }   // not on Watch (full player) and not on a mic screen (video paused)
         val act = ctx as? ComponentActivity
+        val routeNow by rememberUpdatedState(route)
         DisposableEffect(act) {
-            val ob = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_START) fg.value = true else if (e == Lifecycle.Event.ON_STOP) fg.value = false }
+            val ob = LifecycleEventObserver { _, e ->
+                if (e == Lifecycle.Event.ON_START) {
+                    fg.value = true
+                    // back in the app on the Watch page: the full player takes over again
+                    if (routeNow == "watch") { eligible.value = false; playerVm.onEnterWatch() }
+                } else if (e == Lifecycle.Event.ON_STOP) {
+                    fg.value = false
+                    // leaving the app from the Watch page: a playing video goes to the floating window, like leaving the tab does
+                    if (routeNow == "watch") { eligible.value = true; playerVm.onLeaveWatch() }
+                }
+            }
             act?.lifecycle?.addObserver(ob)
             onDispose { act?.lifecycle?.removeObserver(ob); overlay.hide() }
         }
@@ -121,17 +138,42 @@ fun FluvourRoot(vm: AppViewModel = hiltViewModel()) {
         Scaffold(
             containerColor = Fluvour.colors.paper,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),   // screens handle their own system-bar padding
-            bottomBar = { if (tabs.any { it.route == route }) BottomBar(route) { nav.goTab(it) } }
+            bottomBar = { if (!immersive && tabs.any { it.route == route }) BottomBar(route) { nav.goTab(it) } }
         ) { pad ->
             Box(Modifier.fillMaxSize()) {
-            NavHost(nav, startDestination = "home", modifier = Modifier.padding(pad)) {
+            NavHost(
+                nav, startDestination = "home", modifier = Modifier.padding(pad),
+                enterTransition = { fadeIn(tween(120)) }, exitTransition = { fadeOut(tween(90)) },
+                popEnterTransition = { fadeIn(tween(120)) }, popExitTransition = { fadeOut(tween(90)) }
+            ) {
                 composable("home") {
                     HomeScreen(vm, onGoTab = { nav.goTab(it) }, onSettings = { nav.navigate("settings") }, onProgress = { nav.navigate("progress") })
                 }
                 composable("cards") {
                     ReviewTab(onBrowse = { nav.navigate("browse") }, onNewCard = { nav.navigate("card") },
-                        onEdit = { id -> nav.navigate("card?id=$id") }, onQuiz = { set -> nav.navigate("quiz/$set") })
+                        onEdit = { id -> nav.navigate("card?id=$id") }, onQuiz = { set -> nav.navigate("quiz/$set") },
+                        onHeisig = { nav.navigate("heisig") },
+                        onLesson = { unit, drills -> nav.navigate("lesson/$unit?drills=$drills") },
+                        onTest = { unit -> nav.navigate("unittest/$unit") },
+                        onPractice = { ch, q -> nav.navigate("heisig/practice?ch=${android.net.Uri.encode(ch)}&q=${android.net.Uri.encode(q)}") }, onWordPower = { nav.navigate("wordpower") })
                 }
+                composable("lesson/{unitId}?drills={drills}", arguments = listOf(
+                    navArgument("unitId") { type = NavType.StringType },
+                    navArgument("drills") { type = NavType.BoolType; defaultValue = false }
+                )) { entry ->
+                    LessonScreen(entry.arguments?.getString("unitId").orEmpty(), entry.arguments?.getBoolean("drills") ?: false, onClose = { nav.popBackStack() })
+                }
+                composable("unittest/{unitId}", arguments = listOf(navArgument("unitId") { type = NavType.StringType })) { entry ->
+                    UnitTestScreen(entry.arguments?.getString("unitId").orEmpty(), onClose = { nav.popBackStack() })
+                }
+                composable("heisig") { HeisigStudyScreen(onClose = { nav.popBackStack() }) }
+                composable("heisig/practice?ch={ch}&q={q}", arguments = listOf(
+                    navArgument("ch") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("q") { type = NavType.StringType; nullable = true; defaultValue = null }
+                )) { entry ->
+                    HeisigPracticeHost(entry.arguments?.getString("ch"), entry.arguments?.getString("q") ?: "", onClose = { nav.popBackStack() })
+                }
+                composable("wordpower") { WpmeStudyScreen(onClose = { nav.popBackStack() }, onReader = { id -> nav.navigate("reader/$id") }, onSettings = { nav.navigate("settings") }) }
                 composable("browse") {
                     BrowseScreen(vm, onBack = { nav.popBackStack() }, onEdit = { id -> nav.navigate(if (id == null) "card" else "card?id=$id") })
                 }
@@ -141,7 +183,10 @@ fun FluvourRoot(vm: AppViewModel = hiltViewModel()) {
                 composable("quiz/{set}", arguments = listOf(navArgument("set") { type = NavType.StringType })) { entry ->
                     QuizScreen(entry.arguments?.getString("set") ?: "mix", s.targetLang, onClose = { nav.popBackStack() })
                 }
-                composable("read") { ReadScreen(onOpen = { id -> nav.navigate("reader/$id") }, onOpenBook = { sid -> nav.navigate("book/$sid") }) }
+                composable("read") { ReadScreen(onAddCard = { word, sentence, meaning, sentenceId -> vm.startDraft(word, sentence, meaning, sentenceId); nav.navigate("card") }, onOpen = { id -> nav.navigate("reader/$id") }, onOpenBook = { sid -> nav.navigate("book/$sid") }, onOpenDetail = { lid -> nav.navigate("bookdetail/${android.net.Uri.encode(lid)}") }) }
+                composable("bookdetail/{libraryId}", arguments = listOf(navArgument("libraryId") { type = NavType.StringType })) {
+                    BookDetailScreen(onBack = { nav.popBackStack() }, onOpen = { id -> nav.navigate("reader/$id") }, onOpenBook = { sid -> nav.navigate("book/$sid") })
+                }
                 composable("book/{sourceId}", arguments = listOf(navArgument("sourceId") { type = NavType.StringType })) {
                     BookScreen(onBack = { nav.popBackStack() }, onOpen = { id -> nav.navigate("reader/$id") })
                 }
@@ -153,14 +198,11 @@ fun FluvourRoot(vm: AppViewModel = hiltViewModel()) {
                     })
                 }
                 composable("speak") {
-                    SpeakScreen(s.targetLang, onCall = { nav.navigate("call/$it") }, onTopic = { nav.navigate("topic/$it") },
+                    SpeakScreen(s.targetLang, onTopic = { nav.navigate("topic/$it") },
                         onJournal = { nav.navigate("journal") }, onHandwriting = { nav.navigate("handwriting/$it") })
                 }
-                composable("call/{i}", arguments = listOf(navArgument("i") { type = NavType.IntType })) { e ->
-                    CallScreen(e.arguments?.getInt("i") ?: 0, s.targetLang, onClose = { nav.popBackStack() })
-                }
-                composable("topic/{i}", arguments = listOf(navArgument("i") { type = NavType.IntType })) { e ->
-                    TopicScreen(e.arguments?.getInt("i") ?: 0, s.targetLang, onClose = { nav.popBackStack() })
+                composable("topic/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { e ->
+                    TopicScreen(e.arguments?.getString("id") ?: "", onClose = { nav.popBackStack() })
                 }
                 composable("journal") { JournalScreen(s.targetLang, onClose = { nav.popBackStack() }) }
                 composable("handwriting/{mode}", arguments = listOf(navArgument("mode") { type = NavType.StringType })) { e ->

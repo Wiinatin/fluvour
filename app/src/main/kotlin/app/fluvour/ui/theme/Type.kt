@@ -30,9 +30,13 @@ object FluvourFonts {
         FontFamily(f(R.font.noto_serif_thai, 400), f(R.font.noto_serif_thai, 500))
     }
 
+    /** Quranic Arabic: Amiri Quran (SIL OFL, docs/licenses/AmiriQuran-OFL.txt) draws the full Uthmani vowel and recitation marks. */
+    val ArabicQuran: FontFamily by lazy { FontFamily(Font(R.font.amiri_quran, FontWeight.Normal)) }
+
     /** Font for text written in the language being learned (card words, article text, captions). */
     fun target(lang: String): FontFamily = when (lang) {
         "th" -> ThaiSerif
+        "ar" -> ArabicQuran
         "ja", "zh", "ko" -> FontFamily.Serif
         else -> Serif
     }

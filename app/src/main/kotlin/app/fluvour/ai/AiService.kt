@@ -108,7 +108,7 @@ class AiService @Inject constructor(@ApplicationContext private val context: Con
     private suspend fun modelFor(p: AiProvider): String = context.aiKeyStore.data.first()[modelField(p)]?.trim().orEmpty().ifEmpty { p.defaultModel }
 
     // ---- text ----
-    suspend fun text(prompt: String, temperature: Double = 0.3, maxTokens: Int = 700): AiText {
+    suspend fun text(prompt: String, temperature: Double = 0.3, maxTokens: Int = 700, json: Boolean = false): AiText {
         var last: String? = null
         var tried = false
         for (p in AiProvider.TEXT_ORDER) {
@@ -119,7 +119,8 @@ class AiService @Inject constructor(@ApplicationContext private val context: Con
                 val chain = (listOf(model) + GeminiModels.chain(null, true)).distinct()
                 val body = JSONObject()
                     .put("contents", JSONArray().put(JSONObject().put("parts", JSONArray().put(JSONObject().put("text", prompt)))))
-                    .put("generationConfig", JSONObject().put("temperature", temperature).put("maxOutputTokens", maxTokens)).toString()
+                    .put("generationConfig", JSONObject().put("temperature", temperature).put("maxOutputTokens", maxTokens)
+                        .also { if (json) it.put("responseMimeType", "application/json") }).toString()
                 clients.getValue(p).generate(chain) { m -> AiProvider.geminiUrl(m) to body }
             } else {
                 val body = JSONObject().put("model", model)
@@ -147,6 +148,26 @@ class AiService @Inject constructor(@ApplicationContext private val context: Con
         return when (val r = clients.getValue(AiProvider.GEMINI).generate(chain) { m -> AiProvider.geminiUrl(m) to body }) {
             is GeminiResult.Failure -> AiText(null, r.message)
             is GeminiResult.Success -> AiParse.geminiText(r.json)?.let { AiText(it, null, "Gemini · ${r.model}") } ?: AiText(null, "Gemini returned no text.")
+        }
+    }
+
+    // ---- speech ----
+    /** An answer to a speech request: [pcm] is base64 raw sound, or [error] and [message] say why not. */
+    class AiSpeech(val pcm: String?, val error: AiError? = null, val message: String? = null)
+
+    /** Gemini text-to-speech through the Gemini key pool (rotation and model fallback as for text). [prompt] is what to say, with its instruction. */
+    suspend fun speech(prompt: String, voice: String): AiSpeech {
+        if (!pool(AiProvider.GEMINI).hasKeys()) return AiSpeech(null, AiError.NO_KEYS, "No Gemini key yet. Add one in Settings > AI keys.")
+        val body = JSONObject()
+            .put("contents", JSONArray().put(JSONObject().put("parts", JSONArray().put(JSONObject().put("text", prompt)))))
+            .put("generationConfig", JSONObject().put("responseModalities", JSONArray().put("AUDIO")).put("speechConfig",
+                JSONObject().put("voiceConfig", JSONObject().put("prebuiltVoiceConfig", JSONObject().put("voiceName", voice))))).toString()
+        return when (val r = clients.getValue(AiProvider.GEMINI).generate(listOf(GeminiTts.MODEL, GeminiTts.FALLBACK), stamp = false) { m -> AiProvider.geminiUrl(m) to body }) {
+            is GeminiResult.Failure -> AiSpeech(null, r.error, if (r.error == AiError.ALL_KEYS_LIMITED)
+                "Gemini's voice models are at their limit right now. Voices have a smaller limit than text, and your keys are not marked. Try again later." +
+                    r.message.substringAfter(" Replies:", "").let { if (it.isEmpty()) "" else " Replies:$it" }
+                else r.message)
+            is GeminiResult.Success -> AiParse.geminiAudio(r.json)?.let { AiSpeech(it) } ?: AiSpeech(null, AiError.OTHER, "Gemini returned no sound.")
         }
     }
 

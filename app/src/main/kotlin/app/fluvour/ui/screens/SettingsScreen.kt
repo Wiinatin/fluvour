@@ -13,6 +13,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -67,12 +68,18 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit, onReplayIntro: () -> Un
             Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ThemeMode.values().forEach { m -> FButton(m.name, { vm.setMode(m) }, Modifier.weight(1f), outlined = m != s.mode, soft = false) }
             }
-            SwitchRow("Illustrations", app.fluvour.ui.art.ArtPrefs.enabled, { app.fluvour.ui.art.ArtPrefs.enabled = it }, sub = "Textures and printed art")
+            SwitchRow("Illustrations", s.art, { vm.setArt(it) }, sub = "Textures and printed art")
         }
         Group("Daily goal") {
             SettingRow("Cards per day", sub = "New and review", trailing = {
                 FStepper(s.dailyGoal.toString(), { vm.setDailyGoal((s.dailyGoal - 5).coerceAtLeast(5)) }, { vm.setDailyGoal((s.dailyGoal + 5).coerceAtMost(200)) })
             })
+        }
+        Group("Watch") {
+            SettingRow("Suggested clips", sub = "On the Watch page", trailing = {
+                FStepper(s.clipCount.toString(), { vm.setClipCount((s.clipCount - 1).coerceAtLeast(1)) }, { vm.setClipCount((s.clipCount + 1).coerceAtMost(30)) })
+            })
+            ClipLibraryRows(s.clipLibrary, { vm.setClipLibrary(it) })
         }
         Group("Reading") {
             SettingRow("Text size", sub = "In the reader", trailing = {
@@ -89,6 +96,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit, onReplayIntro: () -> Un
             SwitchRow("AI explanations", aiExplain, { aiExplain = it }, sub = "Short notes in the word sheet")
         }
         Group("AI keys") { AiKeysGroup() }
+        Group("Voice packs") { VoicePacksGroup(s.targetLang) }
         Group("Offline packs") {
             listOf("th" to "42 MB", "ja" to "38 MB", "en" to "31 MB").forEach { (code, size) ->
                 val l = Languages.byCode(code)
@@ -113,7 +121,23 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit, onReplayIntro: () -> Un
             Sm(status ?: "Optional. Sync keeps your cards safe and enables AI pictures. Everything else works offline.", Modifier.padding(top = 10.dp), size = 12.sp)
         }
         Group("Dictionaries") { DictionariesGroup(s.targetLang) }
-        Group("YouTube extractor") { ExtractorGroup() }
+        if (s.targetLang == "ja") Group("Heisig deck") { HeisigGroup() }
+        if (s.targetLang == "en") Group("Word Power deck") { WpmeGroup() }
+        if (s.targetLang == "ms") Group("Sarawak deck") { SarawakGroup() }
+        Group("YouTube extractor") {
+            ExtractorGroup()
+            val ytToday by app.fluvour.media.YouTubeGuard.requestsToday.collectAsStateWithLifecycle()
+            SettingRow("YouTube requests today: $ytToday")
+            val pausedMin by produceState(app.fluvour.media.YouTubeGuard.cooldownMinutes()) {
+                while (true) { value = app.fluvour.media.YouTubeGuard.cooldownMinutes(); kotlinx.coroutines.delay(5_000) }
+            }
+            SettingRow(if (pausedMin > 0) "YouTube: paused, about $pausedMin min left" else "YouTube: not paused",
+                sub = if (pausedMin > 0) "YouTube refused this connection. Videos you open yourself are still tried. Clip cards that are not saved on the SD card show their word until this ends." else null,
+                trailing = { if (pausedMin > 0) SmallButton("Try now", { app.fluvour.media.YouTubeGuard.reset() }) })
+            val why by app.fluvour.media.YouTubeGuard.lastReason.collectAsStateWithLifecycle()
+            if (why.isNotBlank()) SettingRow("Last YouTube answer", sub = why)
+        }
+        Group("Saved clips") { ClipSaveRows() }
         Group("Export to Anki") {
             val exportStatus by vm.exportStatus.collectAsStateWithLifecycle()
             val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri -> if (uri != null) vm.exportToAnki(uri) }
@@ -127,7 +151,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit, onReplayIntro: () -> Un
         }
         Group("Accessibility") {
             SwitchRow("Stronger text contrast", contrast, { contrast = it })
-            SwitchRow("Reduce motion", app.fluvour.ui.art.ArtPrefs.reduceMotion, { app.fluvour.ui.art.ArtPrefs.reduceMotion = it })
+            SwitchRow("Reduce motion", s.reduceMotion, { vm.setReduceMotion(it) })
         }
         Group("About") {
             ValueRow("Version", "0.0.1")
@@ -209,7 +233,29 @@ private fun AiKeysGroup(vm: AiKeysViewModel = androidx.hilt.navigation.compose.h
     var modelText by remember { mutableStateOf("") }
     var toRemove by remember { mutableStateOf<Pair<app.fluvour.ai.AiProvider, app.fluvour.ai.MaskedKey>?>(null) }
     val total = all.values.sumOf { it.size }
+    val aiVoice by vm.aiVoice.collectAsStateWithLifecycle()
+    val voice by vm.voice.collectAsStateWithLifecycle()
+    val voiceNote by vm.voiceNote.collectAsStateWithLifecycle()
+    var voiceSheet by remember { mutableStateOf(false) }
 
+    SwitchRow("Natural voice", aiVoice, { vm.setAiVoice(it) }, sub = "Gemini reads words and sentences aloud (needs a Gemini key). Each sound is saved on the phone. If it cannot, the phone's own voice speaks.")
+    if (aiVoice) ValueRow("Voice", voice, onClick = { vm.clearVoiceNote(); voiceSheet = true }, sub = "Choose from 30 Gemini voices and hear each one")
+    if (voiceSheet) FSheet(onDismiss = { voiceSheet = false }, tall = true) {
+        SheetHeader("Voice", { voiceSheet = false })
+        Sm(voiceNote ?: "Tap a voice to choose it and hear it. A voice you have not heard yet is made by Gemini first, so it can take a moment.", Modifier.padding(bottom = 8.dp))
+        app.fluvour.ai.GeminiTts.VOICES.forEach { v ->
+            FRow(v, trailing = { if (v == voice) Icon(Icons.Outlined.Check, "Chosen", Modifier.size(18.dp), tint = c.accent) }, onClick = { vm.pickVoice(v) })
+        }
+    }
+    if (aiVoice) {
+        val aheadOn by vm.aheadOn.collectAsStateWithLifecycle()
+        SwitchRow("Make voices ahead", aheadOn, { vm.setAhead(it) },
+            sub = if (aheadOn) vm.aheadStatus() else "Makes the voice of your cards and improved Output in the background (Wi-Fi or mobile data, also while charging on a low battery) so they play at once.")
+    }
+    if (app.fluvour.BuildConfig.DEBUG) {
+        val localTest by vm.localTest.collectAsStateWithLifecycle()
+        ValueRow("Test offline voice (debug)", "Run", onClick = { vm.testLocalVoice() }, sub = localTest ?: "Reads a sentence with the model folder in ${vm.localTestDir()}")
+    }
     Sm(
         if (total == 0) "No key saved. AI explanations and pictures use the shared service (needs sign-in, limited)."
         else "$total key${if (total == 1) "" else "s"} saved. AI goes straight to the providers below, in this order; a provider without a key is skipped.",
@@ -217,7 +263,7 @@ private fun AiKeysGroup(vm: AiKeysViewModel = androidx.hilt.navigation.compose.h
     )
     app.fluvour.ai.AiProvider.values().forEach { p ->
         val list = all[p].orEmpty()
-        val sub = if (list.isEmpty()) "No key" else "${list.size} key${if (list.size == 1) "" else "s"} · ${list.count { it.limitedAt != null }} hit a limit"
+        val sub = if (list.isEmpty()) "No key" else "${list.size} key${if (list.size == 1) "" else "s"} · ${list.count { it.limitedAt != null && System.currentTimeMillis() - it.limitedAt < 24L * 3_600_000L }} hit a limit today"
         val what = listOfNotNull("text".takeIf { p.text }, "pictures".takeIf { p.image }).joinToString(" and ")
         SettingRow(p.label, sub = "$sub · $what", onClick = {
             open = if (open == p) null else p; text = ""; acct = ""; modelText = models[p].orEmpty(); vm.clearMessage()
@@ -264,4 +310,27 @@ private fun AiKeysGroup(vm: AiKeysViewModel = androidx.hilt.navigation.compose.h
             dismissButton = { androidx.compose.material3.TextButton({ toRemove = null }) { Text("Cancel") } }
         )
     }
+}
+
+/** Background clip library (roadmap 4.2 phase 2): the on/off switch and how many clips are analyzed for the current language. */
+@Composable
+private fun ClipLibraryRows(on: Boolean, onChange: (Boolean) -> Unit, vm: ClipLibraryViewModel = androidx.hilt.navigation.compose.hiltViewModel()) {
+    val n by vm.count.collectAsStateWithLifecycle()
+    SwitchRow("Grow clip library in background", on, onChange, sub = "Only while charging and on Wi-Fi")
+    SettingRow("Library: ${"%,d".format(n)} clips analyzed")
+}
+
+
+/** Clip cards saved ahead on the SD card: the switch, how much is saved, and a button to delete it all. */
+@Composable
+private fun ClipSaveRows() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var on by remember { mutableStateOf(app.fluvour.media.ClipCache.aheadOn(ctx)) }
+    var mb by remember { mutableStateOf<Long?>(null) }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) { mb = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { app.fluvour.media.ClipCache.usedMb(ctx) } }
+    SwitchRow("Save clips ahead", on, { on = it; app.fluvour.media.ClipCache.setAheadOn(ctx, it) }, sub = "Saves the clip cards due soon on the SD card, so they play without asking YouTube")
+    SettingRow("Clips saved: ${mb?.toString() ?: "..."} MB of ${app.fluvour.media.ClipCache.MAX_BYTES / (1024 * 1024)} MB", trailing = {
+        SmallButton("Clear", { scope.launch { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { app.fluvour.media.ClipCache.clear(ctx) }; mb = 0L } })
+    })
 }

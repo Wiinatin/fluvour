@@ -12,7 +12,29 @@ import javax.inject.Inject
 
 /** Settings > AI keys: your keys for each provider. Each list is in rotation order; the first key is the one used next. */
 @HiltViewModel
-class AiKeysViewModel @Inject constructor(private val ai: AiService) : ViewModel() {
+class AiKeysViewModel @Inject constructor(private val ai: AiService, private val tts: app.fluvour.audio.TtsManager, private val local: app.fluvour.audio.LocalVoice) : ViewModel() {
+    val aiVoice: StateFlow<Boolean> = tts.aiVoice
+    val voice: StateFlow<String> = tts.voice
+    fun setAiVoice(on: Boolean) = tts.setAiVoice(on)
+    private val _ahead = MutableStateFlow(tts.budget.enabled)
+    /** Make voices ahead in the background. */
+    val aheadOn: StateFlow<Boolean> = _ahead.asStateFlow()
+    fun setAhead(on: Boolean) { _ahead.value = on; tts.setAhead(on) }
+    fun aheadStatus(): String = tts.budget.statusLine() + tts.batchNote()
+    private val _voiceNote = MutableStateFlow<String?>(null)
+    /** Under the voice list: what is happening or why a voice could not play. Null when it plays. */
+    val voiceNote: StateFlow<String?> = _voiceNote.asStateFlow()
+    /** Chooses a voice and plays a sample with it. A failure is shown in [voiceNote] instead of the phone's voice speaking. */
+    fun pickVoice(v: String) {
+        _voiceNote.value = "Making the sound..."
+        tts.previewVoice(v, "Hello! This is my voice. I am happy to help you learn.") { _voiceNote.value = it }
+    }
+    fun clearVoiceNote() { _voiceNote.value = null }
+    /** Debug builds only: speaks one sentence with the model in the test folder and reports the time (voice packs, step 2). */
+    private val _localTest = MutableStateFlow<String?>(null)
+    val localTest: StateFlow<String?> = _localTest.asStateFlow()
+    fun testLocalVoice() { _localTest.value = "Working..."; viewModelScope.launch { _localTest.value = local.debugSpeak() } }
+    fun localTestDir(): String = local.testDir().absolutePath
     val keys: StateFlow<Map<AiProvider, List<MaskedKey>>> =
         combine(AiProvider.values().map { p -> ai.pool(p).maskedKeys.map { p to it } }) { it.toMap() }
             .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())

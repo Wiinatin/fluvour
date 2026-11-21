@@ -40,6 +40,9 @@ object QuizEngine {
         return if (clean.length <= 70) clean else clean.take(69).trimEnd() + "…"
     }
 
+    /** A card whose short meaning holds its own word (an old card saved with "word (reading)" as the meaning) would show the answer in the question. */
+    fun givesAway(card: QCard): Boolean = shortMeaning(card.meaning).contains(card.word.trim(), ignoreCase = true)
+
     /** How many words in `sentence` are neither the target word nor already known. 0 = a perfect i+1 sentence. */
     fun unknownOthers(sentence: String, word: String, known: Set<String>, tokens: List<Token>): Int =
         tokens.count { t ->
@@ -53,7 +56,7 @@ object QuizEngine {
         cards: List<QCard>, sentencesFor: (QCard) -> List<QSentence>, split: (String) -> List<Token>,
         kinds: Set<QKind>, count: Int, known: Set<String>, rnd: Random = Random.Default
     ): List<Question> {
-        val usable = cards.filter { it.word.isNotBlank() && shortMeaning(it.meaning).isNotBlank() }
+        val usable = cards.filter { it.word.isNotBlank() && shortMeaning(it.meaning).isNotBlank() && !givesAway(it) }
         if (usable.size < 4 || kinds.isEmpty()) return emptyList()
         val knownLower = known.map { it.lowercase() }.toSet()
         val order = usable.sortedByDescending { (if (it.lapses >= LEECH_LAPSES) 100 else 0) + it.lapses * 2 + (if (it.known) 0 else 1) + rnd.nextDouble() }

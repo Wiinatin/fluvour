@@ -8,9 +8,6 @@ package app.fluvour.ui.sample
  */
 data class SampleWord(val word: String, val reading: String, val meaning: String, val note: String)
 data class SampleLine(val text: String, val translation: String)
-data class SampleTopic(val title: String, val english: String, val level: String, val seconds: Int,
-                       val cues: List<Pair<String, String>>, val words: List<String>, val model: Pair<String, String>)
-data class SampleCall(val title: String, val level: String)
 data class SampleFix(val wrong: String, val right: String, val why: String)
 data class SampleQuestion(val kind: Kind, val prompt: String, val options: List<String>, val correct: Int, val hint: String = "", val explanation: String = "",
                           val word: String = "", val meaning: String = "") {
@@ -47,45 +44,6 @@ object Sample {
         "en" to listOf(SampleLine("I woke up very early this morning.", ""), SampleLine("This shop is near the market.", ""),
             SampleLine("I like chicken rice for breakfast.", ""), SampleLine("The air is fresh in the morning.", ""))
     )
-
-    val calls = listOf(SampleCall("Ordering food", "Easy"), SampleCall("Asking directions", "Easy"),
-        SampleCall("Meeting someone new", "Medium"), SampleCall("At the market", "Medium"))
-
-    val topics: Map<String, List<SampleTopic>> = mapOf(
-        "th" to listOf(
-            SampleTopic("อาหารที่ฉันชอบ", "My favorite food", "Easy", 30, listOf("ชอบกินอะไร" to "What do you like to eat?", "กินที่ไหน" to "Where do you eat it?", "ทำไมถึงชอบ" to "Why do you like it?"),
-                listOf("ข้าวมันไก่", "อร่อย", "เผ็ด"), "ฉันชอบกินข้าวมันไก่ เพราะอร่อยมาก" to "Link your reason with เพราะ (because)."),
-            SampleTopic("วันหยุดของฉัน", "My weekend", "Easy", 30, listOf("ไปที่ไหน" to "Where do you go?", "ไปกับใคร" to "Who do you go with?", "ทำอะไร" to "What do you do?"),
-                listOf("วันหยุด", "เพื่อน", "เดินเล่น"), "วันหยุดฉันไปเดินเล่นกับเพื่อนที่สวน" to "Add who you are with using กับ (with)."),
-            SampleTopic("บ้านของฉัน", "My home", "Medium", 45, listOf("อยู่ที่ไหน" to "Where is it?", "มีอะไรบ้าง" to "What is in it?", "ชอบอะไรที่สุด" to "What do you like most?"),
-                listOf("ห้องนอน", "ใกล้", "สบาย"), "บ้านฉันอยู่ใกล้ตลาด ฉันชอบห้องนอนที่สุด" to "Use ที่สุด (the most) to name your favorite."),
-            SampleTopic("งานในฝัน", "My dream job", "Medium", 45, listOf("อยากเป็นอะไร" to "What do you want to be?", "ทำไม" to "Why?", "ต้องทำอย่างไร" to "How will you get there?"),
-                listOf("อยากเป็น", "เพราะ", "ฝึก"), "ฉันอยากเป็นครู เพราะชอบสอนคน" to "Say อยากเป็น (want to be) plus a job.")),
-        "ja" to listOf(
-            SampleTopic("好きな食べ物", "My favorite food", "Easy", 30, listOf("何が好きですか" to "What do you like?", "どこで食べますか" to "Where do you eat it?", "なぜ好きですか" to "Why do you like it?"),
-                listOf("親子丼", "おいしい", "辛い"), "私は親子丼が好きです。とてもおいしいからです。" to "Give a reason with から."),
-            SampleTopic("週末", "My weekend", "Easy", 30, listOf("どこへ行きますか" to "Where do you go?", "誰と行きますか" to "Who with?", "何をしますか" to "What do you do?"),
-                listOf("週末", "友達", "散歩"), "週末は友達と公園を散歩します。" to "Add who with と."),
-            SampleTopic("私の家", "My home", "Medium", 45, listOf("どこにありますか" to "Where is it?", "何がありますか" to "What is in it?", "何が一番好きですか" to "What do you like most?"),
-                listOf("寝室", "近く", "静か"), "家は市場の近くです。寝室が一番好きです。" to "Name a favorite with 一番."),
-            SampleTopic("夢の仕事", "My dream job", "Medium", 45, listOf("何になりたいですか" to "What do you want to be?", "なぜですか" to "Why?", "どうやってなりますか" to "How will you get there?"),
-                listOf("なりたい", "から", "練習"), "先生になりたいです。教えるのが好きだからです。" to "Say なりたい plus a job.")),
-        "en" to listOf(
-            SampleTopic("My favorite food", "Talk about food you like", "Easy", 30, listOf("What do you like to eat?" to "", "Where do you eat it?" to "", "Why do you like it?" to ""),
-                listOf("breakfast", "tasty", "spicy"), "I like chicken rice because it is very tasty." to "Link your reason with because."),
-            SampleTopic("My weekend", "Talk about your days off", "Easy", 30, listOf("Where do you go?" to "", "Who do you go with?" to "", "What do you do?" to ""),
-                listOf("weekend", "friends", "walk"), "On weekends I walk in the park with friends." to "Add who with using with."),
-            SampleTopic("My home", "Describe where you live", "Medium", 45, listOf("Where is it?" to "", "What is in it?" to "", "What do you like most?" to ""),
-                listOf("bedroom", "near", "comfortable"), "My home is near the market. I like the bedroom most." to "Name a favorite with most."),
-            SampleTopic("My dream job", "Talk about work you want", "Medium", 45, listOf("What do you want to be?" to "", "Why?" to "", "How will you get there?" to ""),
-                listOf("want to be", "because", "practice"), "I want to be a teacher because I like teaching people." to "Say want to be plus a job."))
-    )
-
-    /** What the user said on a call, the improved version, and the tip. Mirrors the call result screen. */
-    val callResult: Map<String, Triple<String, String, String>> = mapOf(
-        "th" to Triple("ขอ ข้าวมันไก่ หนึ่ง", "ขอข้าวมันไก่หนึ่งจานค่ะ", "Add a counter word and a polite ending."),
-        "ja" to Triple("親子丼 一つ", "親子丼を一つお願いします", "Add the particle を and a polite ending."),
-        "en" to Triple("Chicken rice one", "Could I have one chicken rice, please?", "Use a polite request and add please."))
 
     val journalText: Map<String, String> = mapOf(
         "th" to "วันนี้ฉันไปตลาด ฉันซื้อข้าวมันไก่จานสอง แล้วฉันกินที่ร้านอยู่ใกล้ที่ตลาด",

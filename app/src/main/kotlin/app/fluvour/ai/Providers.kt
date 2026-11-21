@@ -55,6 +55,12 @@ object AiParse {
         parts?.joinToString("") { map(it)?.get("text") as? String ?: "" }?.trim()?.ifBlank { null }
     } catch (e: Exception) { null }
 
+    /** Gemini text-to-speech: the sound (base64, raw 16-bit mono) in the first candidate's first part. */
+    fun geminiAudio(json: String): String? = try {
+        val parts = list(map(map(list(map(MiniJson.parse(json))?.get("candidates"))?.firstOrNull())?.get("content"))?.get("parts"))
+        parts?.firstNotNullOfOrNull { p -> map(map(p)?.get("inlineData") ?: map(p)?.get("inline_data"))?.get("data") as? String }?.ifBlank { null }
+    } catch (e: Exception) { null }
+
     /** OpenAI-style chat: choices[0].message.content. */
     fun chatText(json: String): String? = try {
         val content = map(map(list(map(MiniJson.parse(json))?.get("choices"))?.firstOrNull())?.get("message"))?.get("content")

@@ -91,7 +91,7 @@ fun PlayerScreen(
         val lineSaved = curLine != null && subLineText(curLine, vm.lang) in mined
         Row(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             RoundAction(if (playing) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, if (playing) "Pause" else "Play",
-                { if (vm.player.isPlaying) vm.player.pause() else vm.player.play() }, size = 52.dp)
+                { vm.togglePlay() }, size = 52.dp)   // togglePlay also restarts a video that has ended
             Sm(stamp(pos), size = 13.sp)
             Spacer(Modifier.weight(1f))
             FButton(if (lineSaved) "Line saved" else "Mine this line", { curLine?.let(vm::mineLine) }, outlined = true, enabled = curLine != null && !lineSaved)

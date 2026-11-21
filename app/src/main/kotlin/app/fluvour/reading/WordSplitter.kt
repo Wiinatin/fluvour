@@ -30,7 +30,25 @@ object WordSplitter {
                 else -> icu(text, langTag)
             }
         } catch (e: Throwable) { icu(text, langTag) }   // a missing or broken dictionary must never stop reading
-        return normalise(text, spans)
+        val tokens = normalise(text, spans)
+        if (langTag.substringBefore('-').lowercase() != "th") return tokens
+        // Thai: the breaker cuts some compounds in two (หมายถึง -> หมาย + ถึง). The word list puts them back together.
+        val lex = thaiLexicon() ?: return tokens
+        return try { ThaiSegmenter.segment(text, tokens, lex) } catch (e: Throwable) { tokens }
+    }
+
+    /** Set once at app start: reads the Thai word list (`assets/lexicon/th.tsv`). Null in tests, where the breaker's own split is used. */
+    @Volatile var thaiLexiconLoader: (() -> ThaiLexicon)? = null
+    private var thaiLex: ThaiLexicon? = null
+    private var thaiLexTried = false
+
+    @Synchronized private fun thaiLexicon(): ThaiLexicon? {
+        if (!thaiLexTried) {
+            val load = thaiLexiconLoader ?: return null
+            thaiLexTried = true
+            thaiLex = try { load() } catch (e: Throwable) { null }   // a missing list must never stop reading
+        }
+        return thaiLex
     }
 
     /** Sorted, non-overlapping tokens that cover the whole text (gaps become non-word tokens). */
@@ -64,6 +82,12 @@ object WordSplitter {
         val reading = t.reading.takeIf { it != "*" }?.let(::katakanaToHiragana)
         Span(t.position, t.position + t.surface.length, base, reading)
     }
+
+    /** Japanese words with their IPADIC part of speech, for the learning path's known-word check. Call from a background thread. */
+    fun japaneseTokens(text: String): List<app.fluvour.path.JaToken> =
+        if (text.isEmpty()) emptyList() else kuromojiTokenizer.tokenize(text).map { t ->
+            app.fluvour.path.JaToken(t.surface, t.baseForm?.takeIf { it != "*" } ?: t.surface, t.partOfSpeechLevel1 ?: "", t.partOfSpeechLevel2 ?: "", t.partOfSpeechLevel3 ?: "", t.position)
+        }
 
     private val jiebaSegmenter by lazy { com.huaban.analysis.jieba.JiebaSegmenter() }
     // Offsets, not the returned words: jieba lower-cases and normalises the words it returns.

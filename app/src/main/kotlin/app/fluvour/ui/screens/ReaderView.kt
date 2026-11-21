@@ -115,9 +115,26 @@ fun ReaderText(x: ReaderCtx, para: Int, from: Int, to: Int, modifier: Modifier =
     val haptic = LocalHapticFeedback.current
     val alpha = if (c.paper.luminance() < 0.3f) 0.42f else 0.62f
 
-    val shown = remember(text, hl, x.sel, tapped, x.lookupWord, x.lookupPara, c.accent, alpha) {
+    // "Read in the book" lights up the word it opened at: full for ReaderFlash.HOLD_MS, then fades over FADE_MS.
+    val spot by ReaderFlash.spot.collectAsState()
+    val mine = spot?.takeIf { it.para == para && it.end > from && it.start < to }
+    val flash = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(mine) {
+        val m = mine ?: return@LaunchedEffect
+        val started = ReaderFlash.begin(m) ?: run { ReaderFlash.clear(m); return@LaunchedEffect }
+        val elapsed = System.currentTimeMillis() - started
+        if (elapsed < ReaderFlash.HOLD_MS) { flash.snapTo(1f); kotlinx.coroutines.delay(ReaderFlash.HOLD_MS - elapsed) }
+        val fadeLeft = (ReaderFlash.HOLD_MS + ReaderFlash.FADE_MS - maxOf(elapsed, ReaderFlash.HOLD_MS)).coerceAtLeast(1L)
+        flash.animateTo(0f, androidx.compose.animation.core.tween(fadeLeft.toInt()))
+        ReaderFlash.clear(m)
+    }
+    val flashLevel = if (mine != null) flash.value else 0f
+
+    val tints = app.fluvour.ui.rememberKanjiTints()
+    val shown = remember(text, hl, x.sel, tapped, x.lookupWord, x.lookupPara, c.accent, alpha, flashLevel, mine, tints) {
         buildAnnotatedString {
             append(text)
+            if (tints != null) text.forEachIndexed { i, ch -> tints.colorOf(ch)?.let { addStyle(SpanStyle(color = it), i, i + 1) } }
             for (h in hl) {
                 val s = (h.startCh - from).coerceIn(0, text.length); val e = (h.endCh - from).coerceIn(0, text.length)
                 if (e > s) addStyle(SpanStyle(background = Color(h.color).copy(alpha = alpha)), s, e)
@@ -129,6 +146,10 @@ fun ReaderText(x: ReaderCtx, para: Int, from: Int, to: Int, modifier: Modifier =
             val t = tapped
             if (x.lookupWord != null && x.lookupPara == para && t != null && t.start >= from && t.end <= to && full.substring(t.start, t.end) == x.lookupWord)
                 addStyle(SpanStyle(background = c.accent.copy(alpha = 0.18f)), t.start - from, t.end - from)
+            if (mine != null && flashLevel > 0f) {
+                val s = (mine.start - from).coerceIn(0, text.length); val e = (mine.end - from).coerceIn(0, text.length)
+                if (e > s) addStyle(SpanStyle(background = c.accent.copy(alpha = 0.7f * flashLevel)), s, e)
+            }
         }
     }
 
