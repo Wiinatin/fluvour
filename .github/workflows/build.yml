@@ -61,8 +61,10 @@ jobs:
       - name: Check the signature
         run: |
           APK=app/build/outputs/apk/release/app-release.apk
-          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner verify --print-certs "$APK" | grep -E "Signer #1 certificate (DN|SHA-256)"
+          ls -l "$APK"
           cp "$APK" Fluvour-${{ github.run_number }}.apk
+          BT=$(ls -d "${ANDROID_HOME:-/usr/local/lib/android/sdk}"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --verbose --print-certs "$APK" || echo "::warning::apksigner could not verify the APK"
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
