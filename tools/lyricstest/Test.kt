@@ -53,6 +53,23 @@ fun main() {
     check("agreement offset 2000", a.pairs >= 15 && a.offsetMs == 2000L && a.spreadMs == 0L)
     val bad = (0 until 20).map { SubLine(it * 5000L, it * 5000L + 3000, "completely different text ${it * 7919} xyz") }
     check("agreement unrelated", LyricsText.agreement(ly, bad).pairs < 4)
+    val ttml = """<tt xmlns="http://www.w3.org/ns/ttml"><body><div>
+<p begin="0:10.500" end="0:13.000"><span begin="0:10.500" end="0:10.900">Hel</span><span begin="0:10.900" end="0:11.300">lo</span> <span begin="0:11.400" end="0:12.000">you &amp; me</span><span ttm:role="x-bg"><span begin="0:12.000" end="0:12.500">(oh)</span></span></p>
+<p begin="00:00:15.000" end="00:00:18.000"><span begin="15.000s" end="16s">Second</span> <span begin="16.2s" end="17s">line</span></p>
+<p begin="0:20.000" end="0:22.000">Plain only</p>
+</div></body></tt>"""
+    val t = LyricsParsers.parseTtml(ttml)
+    check("ttml 3 lines", t.size == 3)
+    check("ttml syllables merged", t[0].words.map { it.text } == listOf("Hello", "you & me") && t[0].text == "Hello you & me")
+    check("ttml times", t[0].words[0].startMs == 10500L && t[0].words[1].startMs == 11400L && t[1].words[1].startMs == 16200L)
+    check("ttml bg dropped", !t[0].text.contains("oh"))
+    check("ttml plain line", t[2].words.isEmpty() && t[2].text == "Plain only")
+    val rows = listOf(Triple(1000L, "", listOf(LyricsParsers.Syl(1000, "e"), LyricsParsers.Syl(1200, "nough "), LyricsParsers.Syl(1500, "said"))))
+    val fr = LyricsParsers.fromRows(rows)
+    check("syllables glued", fr[0].words.map { it.text } == listOf("enough", "said") && fr[0].words[0].startMs == 1000L)
+    val th = LyricsParsers.fromRows(listOf(Triple(0L, "", listOf(LyricsParsers.Syl(0, "สวัสดี"), LyricsParsers.Syl(500, "ครับ")))))
+    check("thai stays separate", th[0].words.size == 2)
+    check("shift", LyricsParsers.shift(t, 1000)[0].words[0].startMs == 11500L && LyricsParsers.shift(t, -99999)[0].startMs == 0L)
     println(if (fails == 0) "ALL OK" else "$fails FAILED")
     if (fails > 0) System.exit(1)
 }

@@ -217,6 +217,14 @@ fun ColumnScope.WatchVideo(vm: PlayerViewModel, ui: PlayerUi, item: Playable, on
     // the time gutter grows with the video: 10:05 fits in 32 dp, 246:29 needs more (it was cut off before)
     val stampWidth = when (stamp(item.lines.lastOrNull()?.startMs ?: 0L).length) { in 0..4 -> 32.dp; 5 -> 34.dp; else -> 40.dp }
     var answer by rememberSaveable(dict.on, dict.index) { mutableStateOf("") }
+    // lyrics source picker and timing nudge: only when lyrics from elsewhere were found for this video
+    if (item.lyricsChoices.isNotEmpty() && !dict.on) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+        item.lyricsChoices.forEachIndexed { i, ch -> TextCtl(ch.label + if (ch.wordSynced) " \u2022" else "", i == item.lyricsChoice, dense = true) { vm.setLyrics(choice = i) } }
+        Sm("  Timing", size = 12.sp)
+        TextCtl("\u2212 0.5s", dense = true) { vm.setLyrics(shiftDelta = -500L) }
+        Sm(if (item.lyricsShiftMs == 0L) "0" else "%+.1fs".format(item.lyricsShiftMs / 1000.0), size = 12.sp)
+        TextCtl("+ 0.5s", dense = true) { vm.setLyrics(shiftDelta = 500L) }
+    }
     if (dict.on && dictLine != null) DictationPane(vm, ui, dict, dictLine, item.lines.size, answer, { answer = it }, trans.getOrNull(dict.index).orEmpty(), showTrans, colorer, ja && furigana)
     else LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = listState, contentPadding = PaddingValues(start = 22.dp, end = 22.dp, top = 6.dp, bottom = 120.dp)) {
         itemsIndexed(item.lines) { n, l ->

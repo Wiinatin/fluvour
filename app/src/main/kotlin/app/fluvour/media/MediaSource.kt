@@ -17,8 +17,15 @@ data class Playable(
     val audioUrl: String? = null,
     val thumbUrl: String? = null, val durationMs: Long = 0L,
     /** Subtitles in the person's own language, if the video has them (for the bilingual switch). */
-    val translation: List<SubLine> = emptyList()
+    val translation: List<SubLine> = emptyList(),
+    /** Where the lines can come from: YouTube's own and lyrics found elsewhere. Empty when there is nothing to choose from. */
+    val lyricsChoices: List<LyricsChoice> = emptyList(),
+    /** Index into [lyricsChoices] of the lines on screen, and the shift (ms) the person nudged on top of them. */
+    val lyricsChoice: Int = 0, val lyricsShiftMs: Long = 0L
 )
+
+/** One possible set of lines for a video: [label] is the source name ("YouTube", "Kugou"...), [note] the line shown under the list. */
+data class LyricsChoice(val label: String, val lines: List<SubLine>, val wordSynced: Boolean, val note: String?)
 
 /** The player talks only to this. YouTube is one implementation; local files and audio can be others. */
 interface MediaSource {

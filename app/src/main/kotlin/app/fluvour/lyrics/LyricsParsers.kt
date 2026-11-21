@@ -121,4 +121,89 @@ object LyricsParsers {
         rows.sortBy { it.first }
         return finish(rows)
     }
+
+    fun shift(lines: List<SubLine>, by: Long): List<SubLine> = if (by == 0L) lines else lines.map { l ->
+        SubLine((l.startMs + by).coerceAtLeast(0), (l.endMs + by).coerceAtLeast(0), l.text, l.words.map { SubWord((it.startMs + by).coerceAtLeast(0), it.text) })
+    }
+
+    // Spaces are not word borders in these scripts, so every run stays a word of its own.
+    private fun Char.unspaced() = this in '\u3400'..'\u9FFF' || this in '\u3040'..'\u30FF' || this in '\u3000'..'\u303F' || this in '\uFF00'..'\uFFEF' || this in '\u0E00'..'\u0E7F'
+
+    /** One syllable or word with its start in ms. */
+    class Syl(val startMs: Long, val text: String)
+
+    /** Glues syllables into words: the text's own spacing says where a word ends ("e" + "nough " is one word). */
+    fun mergeSyllables(syl: List<Syl>): List<SubWord> {
+        val out = ArrayList<SubWord>(); val cur = StringBuilder(); var start = 0L
+        fun flush() { if (cur.isNotBlank()) out += SubWord(start, cur.toString()); cur.setLength(0) }
+        for (s in syl) {
+            val raw = s.text
+            val c = raw.trim()
+            if (c.isEmpty()) { flush(); continue }
+            val joins = cur.isNotEmpty() && !raw.first().isWhitespace() && !cur.last().unspaced() && !c.first().unspaced()
+            if (!joins) flush()
+            if (cur.isEmpty()) start = s.startMs
+            cur.append(c)
+            if (raw.last().isWhitespace()) flush()
+        }
+        flush()
+        return out
+    }
+
+    /** Lines from rows of (start, plain text, syllables). Rows with several syllables become word-synced lines. */
+    fun fromRows(rows: List<Triple<Long, String, List<Syl>>>): List<SubLine> {
+        val r = rows.mapNotNull { (start, text, syl) ->
+            val w = mergeSyllables(syl)
+            when {
+                w.size > 1 -> Triple(minOf(start, w.first().startMs), w.joinToString(" ") { it.text }.replace(Regex("\\s+"), " ").trim(), w)
+                text.isNotBlank() -> Triple(start, text.trim(), emptyList<SubWord>())
+                w.size == 1 -> Triple(start, w[0].text, emptyList<SubWord>())
+                else -> null
+            }
+        }.sortedBy { it.first }
+        return finish(r)
+    }
+
+    // TTML (Apple style, used by BetterLyrics) ----------------------------------------------------------------------------------------
+    private val TTML_P = Regex("""<p\b([^>]*)>(.*?)</p>""", setOf(RegexOption.DOT_MATCHES_ALL))
+    private val TTML_SPAN = Regex("""<span\b([^>]*)>(.*?)</span>""", setOf(RegexOption.DOT_MATCHES_ALL))
+    private val TTML_BG = Regex("""<span\b[^>]*x-bg[^>]*>.*?</span>\s*</span>""", setOf(RegexOption.DOT_MATCHES_ALL))
+    private val TAGS = Regex("""<[^>]+>""")
+
+    private fun attr(a: String, name: String) = Regex("""\b$name\s*=\s*["']([^"']*)["']""").find(a)?.groupValues?.get(1)
+
+    private fun xml(s: String) = s.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&apos;", "'").replace("&#39;", "'").replace("&amp;", "&")
+
+    /** "1:23.456", "00:01:23.456", "83.456s" or "83.456" to ms; null if it is none of these. */
+    fun ttmlTime(t: String?): Long? {
+        val s = t?.trim()?.removeSuffix("s") ?: return null
+        if (s.isEmpty()) return null
+        return try {
+            val parts = s.split(':')
+            var sec = 0.0
+            for (p in parts) sec = sec * 60 + p.toDouble()
+            Math.round(sec * 1000)
+        } catch (_: NumberFormatException) { null }
+    }
+
+    fun parseTtml(doc: String): List<SubLine> {
+        val rows = ArrayList<Triple<Long, String, List<Syl>>>()
+        for (p in TTML_P.findAll(doc)) {
+            val start = ttmlTime(attr(p.groupValues[1], "begin")) ?: continue
+            val inner = TTML_BG.replace(p.groupValues[2], "")
+            val spans = TTML_SPAN.findAll(inner).toList()
+            val syl = ArrayList<Syl>()
+            for ((i, sp) in spans.withIndex()) {
+                val t = ttmlTime(attr(sp.groupValues[1], "begin")) ?: continue
+                var txt = xml(TAGS.replace(sp.groupValues[2], ""))
+                // a text node (a space) between this span and the next one marks a word border
+                val gap = if (i + 1 < spans.size) inner.substring(sp.range.last + 1, spans[i + 1].range.first) else inner.substring(sp.range.last + 1)
+                if (TAGS.replace(gap, "").isNotEmpty() && TAGS.replace(gap, "").first().isWhitespace() && !txt.last().isWhitespace()) txt += " "
+                syl += Syl(t, txt)
+            }
+            val plain = xml(TAGS.replace(inner, "")).replace(Regex("\\s+"), " ").trim()
+            rows += Triple(start, plain, syl)
+        }
+        return fromRows(rows)
+    }
 }

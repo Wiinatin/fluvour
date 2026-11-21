@@ -117,3 +117,77 @@ object KugouProvider : LyricsProvider {
         return out
     }
 }
+
+/** BetterLyrics: Apple-style TTML with per-syllable times. Free only for songs already in its cache (others answer 401), so a miss is normal. */
+object BetterLyricsProvider : LyricsProvider {
+    override val name = "BetterLyrics"
+    override fun find(q: Query, http: LyricsHttp): List<Cand> {
+        val out = ArrayList<Cand>()
+        for (g in q.guess.all()) {
+            if (g.title.isBlank() || g.artist.isBlank()) continue
+            val d = if (q.videoSec > 0) "&d=${q.videoSec}" else ""
+            for (path in listOf("getLyrics", "ttml/getLyrics")) {
+                val body = http.get("https://lyrics-api.boidu.dev/$path?s=${enc(g.title)}&a=${enc(g.artist)}$d") ?: continue
+                val doc = unwrap(body) ?: continue
+                val lines = LyricsParsers.parseTtml(doc)
+                if (lines.size >= 4) { out += Cand(name, lines, g.title, g.artist, q.videoSec, false); return out }
+            }
+        }
+        return out
+    }
+
+    private fun unwrap(body: String): String? {
+        val t = body.trim()
+        if (!t.startsWith("{")) return t.takeIf { "<tt" in it }
+        return try { val o = JSONObject(t); o.optString("ttml", "").ifBlank { o.optString("lyrics", "") }.takeIf { it.isNotBlank() } } catch (_: Exception) { null }
+    }
+}
+
+/** LyricsPlus: syllable-timed lyrics from volunteer mirrors, so all mirrors are asked at once and the first real answer wins. */
+object LyricsPlusProvider : LyricsProvider {
+    override val name = "LyricsPlus"
+    private val MIRRORS = listOf(
+        "https://lyricsplus.prjktla.my.id", "https://lyricsplus.atomix.one", "https://lyricsplus.binimum.org",
+        "https://lyricsplus.prjktla.workers.dev", "https://lyricsplus-seven.vercel.app", "https://lyrics-plus-backend.vercel.app"
+    )
+
+    override fun find(q: Query, http: LyricsHttp): List<Cand> {
+        val g = q.guess.all().firstOrNull { it.title.isNotBlank() && it.artist.isNotBlank() } ?: return emptyList()
+        val dur = if (q.videoSec > 0) "&duration=${q.videoSec}" else ""
+        val path = "/v2/lyrics/get?title=${enc(g.title)}&artist=${enc(g.artist)}$dur"
+        val pool = java.util.concurrent.Executors.newFixedThreadPool(MIRRORS.size)
+        try {
+            val done = java.util.concurrent.ExecutorCompletionService<List<SubLine>?>(pool)
+            for (m in MIRRORS) done.submit { parse(http.get(m + path)) }
+            val end = System.currentTimeMillis() + 5000
+            repeat(MIRRORS.size) {
+                val left = end - System.currentTimeMillis()
+                val f = done.poll(maxOf(left, 1), java.util.concurrent.TimeUnit.MILLISECONDS) ?: return emptyList()
+                val lines = try { f.get() } catch (_: Exception) { null }
+                if (lines != null && lines.size >= 4) return listOf(Cand(name, lines, g.title, g.artist, q.videoSec, false))
+            }
+        } finally { pool.shutdownNow() }
+        return emptyList()
+    }
+
+    private fun parse(body: String?): List<SubLine>? {
+        if (body == null) return null
+        return try {
+            val arr = JSONObject(body).optJSONArray("lyrics") ?: return null
+            val rows = ArrayList<Triple<Long, String, List<LyricsParsers.Syl>>>()
+            for (i in 0 until arr.length()) {
+                val o = arr.optJSONObject(i) ?: continue
+                val start = o.optLong("time", -1); if (start < 0) continue
+                val sy = o.optJSONArray("syllabus")
+                val syl = ArrayList<LyricsParsers.Syl>()
+                if (sy != null) for (j in 0 until sy.length()) {
+                    val s = sy.optJSONObject(j) ?: continue
+                    val t = s.optLong("time", -1); if (t < 0) continue
+                    syl += LyricsParsers.Syl(t, s.optString("text", ""))
+                }
+                rows += Triple(start, o.optString("text", ""), syl)
+            }
+            LyricsParsers.fromRows(rows)
+        } catch (_: Exception) { null }
+    }
+}

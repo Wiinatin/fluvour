@@ -505,22 +505,7 @@ class PlayerViewModel @Inject constructor(
                     // Split the lines into words off the main thread (Kuromoji / jieba can take a moment the first time). The lines around where
                     // playback starts go first and the list is published after every chunk, so furigana, colours and the word fill are ready within
                     // moments; a long video used to wait for every line before showing any.
-                    val lines = item.lines
-                    val first = lines.indexOfLast { it.startMs <= start }.coerceAtLeast(0)
-                    val order = (first until lines.size).toList() + (0 until first).toList()
-                    val done = arrayOfNulls<List<Token>>(lines.size)
-                    var at = 0
-                    var chunk = 25
-                    while (at < order.size) {
-                        if (_ui.value.item !== item) break   // another video was opened meanwhile
-                        val ids = order.subList(at, minOf(at + chunk, order.size))
-                        val part = withContext(Dispatchers.Default) { ids.map { it to WordSplitter.split(lines[it].text, lang) } }
-                        for ((i, t) in part) done[i] = t
-                        val snapshot = done.map { it ?: emptyList() }
-                        _ui.update { if (it.item === item) it.copy(tokens = snapshot) else it }
-                        at += ids.size
-                        chunk = 150
-                    }
+                    tokenize(item, start)
                 },
                 onFailure = {
                     _ui.value = PlayerUi(error = if (app.fluvour.media.YouTubeGuard.isBlock(it) && it !is app.fluvour.media.YouTubeCooldownException) "YouTube is asking for a bot check on this connection. Fluvour will pause YouTube requests for a while. Try switching between Wi-Fi and mobile data." else "Could not open this video: ${it.message ?: it.javaClass.simpleName}")
@@ -529,6 +514,43 @@ class PlayerViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    /** Splits every line of [item] into words, the lines around [start] first. Stops when another item is shown. */
+    private suspend fun tokenize(item: Playable, start: Long) {
+        val lines = item.lines
+        val first = lines.indexOfLast { it.startMs <= start }.coerceAtLeast(0)
+        val order = (first until lines.size).toList() + (0 until first).toList()
+        val done = arrayOfNulls<List<Token>>(lines.size)
+        var at = 0
+        var chunk = 25
+        while (at < order.size) {
+            if (_ui.value.item !== item) break   // another video was opened meanwhile
+            val ids = order.subList(at, minOf(at + chunk, order.size))
+            val part = withContext(Dispatchers.Default) { ids.map { it to WordSplitter.split(lines[it].text, lang) } }
+            for ((i, t) in part) done[i] = t
+            val snapshot = done.map { it ?: emptyList() }
+            _ui.update { if (it.item === item) it.copy(tokens = snapshot) else it }
+            at += ids.size
+            chunk = 150
+        }
+    }
+
+    /**
+     * Source picker and offset nudge for the lyrics: [choice] switches to another set of lines (its own shift starts at 0), [shiftDelta]
+     * moves the lines in time (positive = later). The lines are split into words again for the new set.
+     */
+    fun setLyrics(choice: Int = -1, shiftDelta: Long = 0L) {
+        val item = _ui.value.item ?: return
+        if (item.lyricsChoices.isEmpty()) return
+        val c = if (choice in item.lyricsChoices.indices) choice else item.lyricsChoice
+        val shift = if (c != item.lyricsChoice) 0L else (item.lyricsShiftMs + shiftDelta).coerceIn(-10_000L, 10_000L)
+        if (c == item.lyricsChoice && shift == item.lyricsShiftMs) return
+        val pick = item.lyricsChoices[c]
+        val next = item.copy(lines = app.fluvour.lyrics.LyricsParsers.shift(pick.lines, shift), subtitleNote = pick.note, lyricsChoice = c, lyricsShiftMs = shift)
+        val sameLines = c == item.lyricsChoice   // only moved in time: the words are the same, keep them
+        _ui.update { it.copy(item = next, tokens = if (sameLines) it.tokens else emptyList()) }
+        if (!sameLines) viewModelScope.launch { tokenize(next, player.currentPosition) }
     }
 
     /** One `sources` row per video link (the same link reuses its row), so mined sentences can point back to the video. */
