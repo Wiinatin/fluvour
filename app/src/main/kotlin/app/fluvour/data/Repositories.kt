@@ -41,7 +41,7 @@ data class Settings(
     val levels: Map<String, String> = emptyMap(), // declared level per language code, e.g. "en" -> "C2" (see ClipLevels)
     val clipLibrary: Boolean = true,  // grow the local clip library in the background (charging, Wi-Fi)
     val art: Boolean = true,          // Settings > Illustrations (saved, so it survives a restart)
-    val reduceMotion: Boolean = false // Settings > Reduce motion (saved)
+    val reduceMotion: Boolean = false, // Settings > Reduce motion (saved)
     val lyricsFinder: Boolean = true // Settings > Watch > Find synced lyrics (saved)
 )
 
