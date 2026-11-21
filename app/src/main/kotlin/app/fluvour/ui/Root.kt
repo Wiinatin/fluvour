@@ -199,15 +199,12 @@ fun FluvourRoot(vm: AppViewModel = hiltViewModel()) {
                 }
                 composable("speak") {
                     SpeakScreen(s.targetLang, onTopic = { nav.navigate("topic/$it") },
-                        onJournal = { nav.navigate("journal") }, onHandwriting = { nav.navigate("handwriting/$it") })
+                        onJournal = { nav.navigate("journal") })
                 }
                 composable("topic/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { e ->
                     TopicScreen(e.arguments?.getString("id") ?: "", onClose = { nav.popBackStack() })
                 }
                 composable("journal") { JournalScreen(s.targetLang, onClose = { nav.popBackStack() }) }
-                composable("handwriting/{mode}", arguments = listOf(navArgument("mode") { type = NavType.StringType })) { e ->
-                    HandwritingScreen(e.arguments?.getString("mode") ?: "hw", s.targetLang, onClose = { nav.popBackStack() })
-                }
                 composable("watch") {
                     WatchScreen(s.targetLang, onAddCard = { word, sentence, meaning, sentenceId ->
                         vm.startDraft(word, sentence, meaning, sentenceId); nav.navigate("card")

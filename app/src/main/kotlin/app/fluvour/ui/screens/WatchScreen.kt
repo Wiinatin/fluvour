@@ -102,6 +102,8 @@ fun WatchScreen(lang: String, onAddCard: (String, String, String, String?) -> Un
     val likedIds = remember(likedList) { likedList.map { it.id }.toSet() }
     var libTab by rememberSaveable { mutableIntStateOf(0) }   // idle page: 0 Recent, 1 Liked
     val search by vm.search.collectAsStateWithLifecycle()
+    val suggest by vm.suggest.collectAsStateWithLifecycle()
+    val recent by vm.recent.collectAsStateWithLifecycle()
     val su by sv.ui.collectAsStateWithLifecycle()
     val focus = LocalFocusManager.current
     val item = pui.item
@@ -156,6 +158,7 @@ fun WatchScreen(lang: String, onAddCard: (String, String, String, String?) -> Un
                 val onField: (String) -> Unit = { v ->
                     val pasted = vm.looksLikeLink(v) && v.length - text.length > 3   // a paste, not typing
                     text = v
+                    vm.typing(v)
                     if (v.isBlank()) vm.clearSearch()
                     if (pasted) go(v)
                 }
@@ -185,6 +188,13 @@ fun WatchScreen(lang: String, onAddCard: (String, String, String, String?) -> Un
                         clipsOpen -> ClipsBody(su, opening = pui.loading, onOpen = { url -> focus.clearFocus(); vm.open(url); if (url == item?.sourceUrl) { clipsOpen = false; browsing = false } })
                         pui.loading -> Sm("Opening...", Modifier.padding(top = 18.dp))
                         text.isBlank() -> {
+                            if (recent.isNotEmpty() && browsing) {
+                                Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Eyebrow("Recent searches", Modifier.weight(1f))
+                                    LinkText("Clear", { vm.forgetRecent() })
+                                }
+                                recent.take(6).forEach { q -> SuggestRow(q, Icons.Outlined.History, onPick = { text = q; go(q) }, onRemove = { vm.forgetRecent(q) }) }
+                            }
                             ClipsEntry(su.row, onOpen = { clipsOpen = true }, onSetLevel = { pickLevel = true })
                             LibraryTabs(libTab, likedList.size) { libTab = it }
                             if (libTab == 0) HistoryList(hist, current = item?.sourceUrl, likedIds = likedIds, onOpen = { h -> vm.open(h.url); if (h.url == item?.sourceUrl) browsing = false }, onRemove = { vm.removeHistory(it.id) })
@@ -192,7 +202,10 @@ fun WatchScreen(lang: String, onAddCard: (String, String, String, String?) -> Un
                         }
                         search.loading -> Sm("Searching...", Modifier.padding(top = 18.dp))
                         search.error != null -> Sm(search.error!!, Modifier.padding(top = 18.dp), color = c.accent)
-                        search.hits == null -> Sm("Press search on the keyboard to look this up on YouTube.", Modifier.padding(top = 18.dp))
+                        search.hits == null -> {
+                            if (suggest.isEmpty()) Sm("Press search on the keyboard to look this up on YouTube.", Modifier.padding(top = 18.dp))
+                            else suggest.forEach { q -> SuggestRow(q, Icons.Outlined.Search, onPick = { text = q; go(q) }, onFill = { text = q; vm.typing(q) }) }
+                        }
                         search.hits!!.isEmpty() -> Sm("Nothing found. Try other words.", Modifier.padding(top = 18.dp))
                         else -> search.hits!!.forEach { h ->
                             VideoRow(h.thumbUrl, h.title, listOfNotNull(h.uploader, if (h.durationMs > 0) clock(h.durationMs) else null).joinToString(" \u00B7 "),
@@ -381,5 +394,17 @@ internal fun HeartButton(liked: Boolean, what: String = "liked videos", onClick:
     IconButton({ haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() }, Modifier.size(44.dp)) {
         Icon(if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, if (liked) "Remove from $what" else "Add to $what",
             Modifier.size(21.dp).graphicsLayer { scaleX = pop.value; scaleY = pop.value }, tint = if (liked) c.accent else c.mute)
+    }
+}
+
+/** One search suggestion or recent search: tap to search it. The arrow puts it in the box to keep typing; the cross forgets a recent search. */
+@Composable
+private fun SuggestRow(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onPick: () -> Unit, onFill: (() -> Unit)? = null, onRemove: (() -> Unit)? = null) {
+    val c = Fluvour.colors
+    Row(Modifier.fillMaxWidth().clickable(onClick = onPick).padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, null, Modifier.padding(end = 14.dp).size(20.dp), tint = c.mute)
+        Text(text, Modifier.weight(1f).padding(vertical = 10.dp), color = c.ink, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (onFill != null) IconBtn(Icons.Outlined.NorthWest, "Use this text", onFill, tint = c.mute)
+        if (onRemove != null) IconBtn(Icons.Outlined.Close, "Remove", onRemove, tint = c.mute)
     }
 }

@@ -244,8 +244,8 @@ class SpeakingViewModel @Inject constructor(
             val r = improver.improve(lang, own, level, tr)
             val reply = r.text ?: run { _failDetail.value = r.message; return false }
             val imp = SpeakingParse.improved(reply) ?: return false
-            val words = cardRepo.addSpeakingWords(settingsRepo.ensureUserId(), t.languageCode, imp.newWords)
-            v = v.copy(improved = imp.improved, newWords = SpeakingParse.newWordsJson(words), updatedAt = System.currentTimeMillis())
+            // Words worth learning are only suggested here; a card is made when the person taps Save.
+            v = v.copy(improved = imp.improved, newWords = SpeakingParse.newWordsJson(imp.newWords), updatedAt = System.currentTimeMillis())
             dao.updateVersion(v)
             tts.kickAhead()   // its voice is made in the background right away
         }
@@ -266,5 +266,54 @@ class SpeakingViewModel @Inject constructor(
 
     fun speak(text: String) { _topic.value?.let { tts.speak(text, it.languageCode, keep = true) } }
 
-    override fun onCleared() { if (_phase.value == SpeakPhase.RECORDING) recorder.discard() }
+    // ---- sound on the result page: the AI's version or your own recording, with pause, seek and speed ----
+    private val _nowKey = MutableStateFlow<String?>(null)
+    /** Which text the sound belongs to ("improved", "me"), or null. */
+    val nowKey: StateFlow<String?> = _nowKey.asStateFlow()
+    private val _speed = MutableStateFlow(1f)
+    val speed: StateFlow<Float> = _speed.asStateFlow()
+    private val _loadingKey = MutableStateFlow<String?>(null)
+    val loadingKey: StateFlow<String?> = _loadingKey.asStateFlow()
+
+    fun playAi(key: String, text: String) {
+        val t = _topic.value ?: return
+        _nowKey.value = key
+        _loadingKey.value = key
+        tts.speak(text, t.languageCode, keep = true)
+        viewModelScope.launch { kotlinx.coroutines.delay(15_000); if (_loadingKey.value == key) _loadingKey.value = null }
+    }
+
+    fun playMine(v: SpeakingVersionEntity) {
+        val f = v.audioPath?.let { File(it) } ?: return
+        _nowKey.value = "me"; _loadingKey.value = null
+        tts.playFile(f)
+    }
+
+    /** The state of the sound for [key]: inactive when another text (or nothing) is playing. */
+    fun playState(key: String): app.fluvour.ui.screens.PlayState {
+        if (_nowKey.value != key || !tts.hasSound) return app.fluvour.ui.screens.PlayState()
+        if (_loadingKey.value == key) _loadingKey.value = null
+        return app.fluvour.ui.screens.PlayState(true, tts.isPlaying(), tts.positionMs(), tts.durationMs())
+    }
+    fun pauseSound() = tts.pause()
+    fun resumeSound() = tts.resume()
+    fun seekSound(ms: Int) = tts.seekTo(ms)
+    fun setSpeed(f: Float) { _speed.value = f; tts.setSpeed(f) }
+    fun stopSound() { tts.stop(); _nowKey.value = null; _loadingKey.value = null }
+
+    /** Saves one suggested word as a card (the person tapped Save). */
+    fun saveWord(versionId: String, word: String) {
+        viewModelScope.launch {
+            val v = dao.version(versionId) ?: return@launch
+            val t = dao.topic(v.topicId) ?: return@launch
+            val words = SpeakingParse.newWordsFrom(v.newWords)
+            val w = words.firstOrNull { it.word == word } ?: return@launch
+            val made = cardRepo.addSpeakingWords(settingsRepo.ensureUserId(), t.languageCode, listOf(w)).firstOrNull() ?: return@launch
+            // an existing card for the word counts as saved too; mark it so the button changes
+            val id = made.cardId ?: cardRepo.findWordPlain(t.languageCode, w.word)?.id
+            dao.updateVersion(v.copy(newWords = SpeakingParse.newWordsJson(words.map { if (it.word == word) it.copy(cardId = id) else it }), updatedAt = System.currentTimeMillis()))
+        }
+    }
+
+    override fun onCleared() { if (_phase.value == SpeakPhase.RECORDING) recorder.discard(); tts.stop() }
 }

@@ -225,6 +225,21 @@ class TtsManager @Inject constructor(
         return job.await()
     }
 
+    // ---- transport for the sound that is playing (Output screens): pause, resume, seek, speed ----
+    @Volatile private var speed = 1f
+    /** True while a sound file is loaded in the player (playing or paused). False for the phone's own voice, which cannot be paused here. */
+    val hasSound: Boolean get() = player != null
+    fun isPlaying(): Boolean = try { player?.isPlaying == true } catch (_: Exception) { false }
+    fun positionMs(): Int = try { player?.currentPosition ?: 0 } catch (_: Exception) { 0 }
+    fun durationMs(): Int = try { player?.duration?.takeIf { it > 0 } ?: 0 } catch (_: Exception) { 0 }
+    fun pause() { try { player?.takeIf { it.isPlaying }?.pause() } catch (_: Exception) {}; Ducker.set("tts", false) }
+    fun resume() { try { player?.let { applySpeed(it); it.start(); Ducker.set("tts", true) } } catch (_: Exception) {} }
+    fun seekTo(ms: Int) { try { player?.seekTo(ms) } catch (_: Exception) {} }
+    fun setSpeed(f: Float) { speed = f; try { player?.takeIf { it.isPlaying }?.let { applySpeed(it) } } catch (_: Exception) {} }
+    private fun applySpeed(p: MediaPlayer) { try { p.playbackParams = p.playbackParams.setSpeed(speed) } catch (_: Exception) {} }
+    /** Plays a saved file (your own recording). */
+    fun playFile(file: File) { if (!file.exists()) return; stop(); val id = "fluvour-${++counter}"; current = id; play(file, id) }
+
     fun stop() {
         aiJob?.cancel(); aiJob = null
         releasePlayer()
@@ -442,7 +457,7 @@ class TtsManager @Inject constructor(
         try {
             p.setAudioAttributes(AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).setUsage(AudioAttributes.USAGE_MEDIA).build())
             p.setDataSource(file.path)
-            p.setOnPreparedListener { it.start() }
+            p.setOnPreparedListener { applySpeed(it); it.start() }
             p.setOnCompletionListener { end() }
             p.setOnErrorListener { _, _, _ -> if (!isKept(file)) file.delete(); end(); true }   // an unreadable file is made again next time
             p.prepareAsync()

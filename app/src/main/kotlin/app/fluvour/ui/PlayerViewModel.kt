@@ -411,12 +411,41 @@ class PlayerViewModel @Inject constructor(
     private val linkPattern = Regex("(youtube\\.com/|youtu\\.be/)", RegexOption.IGNORE_CASE)
     fun looksLikeLink(t: String) = linkPattern.containsMatchIn(t)
 
+    // suggestions while typing, and the last searches
+    private val _suggest = MutableStateFlow<List<String>>(emptyList())
+    val suggest: StateFlow<List<String>> = _suggest.asStateFlow()
+    private var suggestJob: Job? = null
+    private val _recent = MutableStateFlow(loopPrefs.getString("recent_searches", "").orEmpty().split("\n").filter { it.isNotBlank() })
+    val recent: StateFlow<List<String>> = _recent.asStateFlow()
+
+    /** Called on every change of the search text: asks for suggestions after a short pause. A newer keystroke cancels the older request. */
+    fun typing(text: String) {
+        suggestJob?.cancel()
+        val t = text.trim()
+        if (t.isEmpty() || looksLikeLink(t)) { _suggest.value = emptyList(); return }
+        suggestJob = viewModelScope.launch {
+            kotlinx.coroutines.delay(300)
+            _suggest.value = source.suggest(t)
+        }
+    }
+    private fun rememberSearch(t: String) {
+        val list = (listOf(t) + _recent.value.filter { !it.equals(t, ignoreCase = true) }).take(8)
+        _recent.value = list
+        loopPrefs.edit().putString("recent_searches", list.joinToString("\n")).apply()
+    }
+    fun forgetRecent(q: String? = null) {
+        val list = if (q == null) emptyList() else _recent.value.filter { it != q }
+        _recent.value = list
+        loopPrefs.edit().putString("recent_searches", list.joinToString("\n")).apply()
+    }
+
     /** Returns true when the text was a link (and is now being opened), false when it started a search. */
     fun submit(text: String): Boolean {
         val t = text.trim()
         if (t.isEmpty()) return false
         if (looksLikeLink(t)) { clearSearch(); open(if (t.startsWith("http", true)) t else "https://$t"); return true }
-        searchJob?.cancel()
+        searchJob?.cancel(); suggestJob?.cancel(); _suggest.value = emptyList()
+        rememberSearch(t)
         _search.value = SearchUi(loading = true)
         searchJob = viewModelScope.launch {
             withContext(app.fluvour.media.YouTubeGuard.UserRequest()) { source.search(t) }.fold(
@@ -426,7 +455,7 @@ class PlayerViewModel @Inject constructor(
         }
         return false
     }
-    fun clearSearch() { searchJob?.cancel(); _search.value = SearchUi() }
+    fun clearSearch() { searchJob?.cancel(); suggestJob?.cancel(); _suggest.value = emptyList(); _search.value = SearchUi() }
 
     private fun videoId(url: String) = UUID.nameUUIDFromBytes("video:${url.trim()}".toByteArray()).toString()
 

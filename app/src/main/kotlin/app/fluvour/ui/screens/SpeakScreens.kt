@@ -48,21 +48,22 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
- * Output tab: topics (real speaking practice) and the Write entries (journal, practice sheet, handwriting).
- * Topics come from the database and are recorded, transcribed and improved.
+ * Output tab: speak about a topic and write a journal entry. Topics come from the database and are recorded, transcribed and improved;
+ * journal entries are kept in a small file and checked by the AI.
  */
 @Composable
-fun SpeakScreen(lang: String, onTopic: (String) -> Unit, onJournal: () -> Unit, onHandwriting: (String) -> Unit,
-                vm: SpeakingViewModel = hiltViewModel()) {
+fun SpeakScreen(lang: String, onTopic: (String) -> Unit, onJournal: () -> Unit,
+                vm: SpeakingViewModel = hiltViewModel(), jvm: JournalViewModel = hiltViewModel()) {
+    val entries by remember(lang) { jvm.entries(lang) }.collectAsStateWithLifecycle(emptyList())
     Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).ambient().languageMark().padding(horizontal = 22.dp)) {
         Eyebrow("Speak and write", Modifier.padding(top = 24.dp))
         H1("Output", Modifier.padding(top = 8.dp))
-        Sm("Pick a topic, speak, and learn from the corrections.", Modifier.padding(top = 16.dp, bottom = 4.dp))
+        SectionEyebrow("Speak", top = 22.dp)
+        Sm("Pick a topic, talk for up to 3 minutes, and see how a natural speaker would say it.", Modifier.padding(top = 4.dp, bottom = 6.dp))
         TopicsTab(lang, vm, onTopic)
-        SectionEyebrow("Write", top = 30.dp)
-        FRow("Journal", subtitle = "A few lines in ${Languages.byCode(lang).name}", onClick = onJournal)
-        FRow("Practice sheet", subtitle = "Ruled for your words", onClick = { onHandwriting("ps") })
-        FRow("Handwriting", subtitle = "Write by hand, check with the camera", onClick = { onHandwriting("hw") })
+        SectionEyebrow("Write", top = 34.dp)
+        FRow("Journal", subtitle = if (entries.isEmpty()) "Write a few lines in ${Languages.byCode(lang).name} and get them corrected"
+            else "${entries.size} ${if (entries.size == 1) "entry" else "entries"} · last ${shortDate(entries.first().updatedAt)}", onClick = onJournal)
         Spacer(Modifier.height(30.dp))
     }
 }
@@ -113,25 +114,6 @@ private fun TopicsTab(lang: String, vm: SpeakingViewModel, onTopic: (String) -> 
     }
 }
 
-@Composable
-private fun Compare(label: String, text: String, note: String? = null, marked: List<String> = emptyList(), action: (@Composable () -> Unit)? = null) {
-    val c = Fluvour.colors
-    Column(Modifier.fillMaxWidth().padding(top = 18.dp)) {
-        HorizontalDivider(color = c.line)
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Eyebrow(label, Modifier.weight(1f))
-            action?.invoke()
-        }
-        if (marked.isEmpty()) TargetText(text, Modifier.padding(top = 6.dp), size = 22.sp, lineHeight = 37.sp)
-        else Text(buildAnnotatedString {
-            SpeakingParse.segments(text, marked).forEach { seg ->
-                if (seg.marked) withStyle(SpanStyle(color = c.accent, fontWeight = FontWeight.Bold)) { append(seg.text) } else append(seg.text)
-            }
-        }, Modifier.padding(top = 6.dp), color = c.ink, fontFamily = targetFont(), fontSize = 22.sp, lineHeight = 37.sp)
-        if (note != null) Sm(note, Modifier.padding(top = 4.dp))
-    }
-}
-
 private fun mmss(s: Int) = "${s / 60}:${(s % 60).toString().padStart(2, '0')}"
 
 /**
@@ -141,6 +123,7 @@ private fun mmss(s: Int) = "${s / 60}:${(s % 60).toString().padStart(2, '0')}"
 @Composable
 fun TopicScreen(topicId: String, onClose: () -> Unit, vm: SpeakingViewModel = hiltViewModel()) {
     LaunchedEffect(topicId) { vm.open(topicId) }
+    DisposableEffect(Unit) { onDispose { vm.stopSound() } }
     val phase by vm.phase.collectAsStateWithLifecycle()
     val shown by vm.shown.collectAsStateWithLifecycle()
     val v = shown
@@ -178,15 +161,12 @@ private fun RecordPage(vm: SpeakingViewModel, phase: SpeakPhase, onClose: () -> 
             H1(topic?.title ?: "", Modifier.padding(top = 6.dp), size = 30.sp, font = targetFont())
             if (rec) TimerRing(1f - elapsed / 180f, mmss(elapsed), Modifier.padding(vertical = 18.dp))
         }
-        if (cues.isNotEmpty()) {
-            Eyebrow("Cue words", Modifier.padding(top = 14.dp))
-            cues.forEach { cue ->
-                Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                    TargetText(cue.first, size = 18.sp)
-                    if (cue.second.isNotBlank()) Sm(cue.second, size = 12.5.sp)
-                }
+        if (cues.isNotEmpty() && !rec) AuthorPanel(ai = true, title = "Cue words", modifier = Modifier.padding(top = 18.dp)) {
+            cues.forEachIndexed { i, cue ->
+                if (i > 0) HorizontalDivider(color = c.line, modifier = Modifier.padding(vertical = 8.dp))
+                TargetText(cue.first, size = 18.sp)
+                if (cue.second.isNotBlank()) Sm(cue.second, size = 12.5.sp)
             }
-            HorizontalDivider(color = c.line, modifier = Modifier.padding(top = 12.dp))
         }
         if (busy) Sm("This can take a few seconds. Your recording is saved.", Modifier.padding(top = 18.dp))
         if (!busy && !rec && unfinished != null) {
@@ -208,60 +188,83 @@ private fun RecordPage(vm: SpeakingViewModel, phase: SpeakPhase, onClose: () -> 
     }
 }
 
-/** The result of one recording: what you said (words in another language highlighted), the improved version, and the new words that became cards. */
+/** The sentence of [text] that holds [word], so the word sheet explains it in context. */
+internal fun sentenceOf(text: String, word: String): String =
+    text.split(Regex("(?<=[。！？.!?\\n])")).map { it.trim() }.firstOrNull { it.contains(word) }?.takeIf { it.isNotBlank() } ?: text
+
+/**
+ * The result of one recording. Your own words and the AI's version look different (plain card against tinted card with an "AI" mark).
+ * Words in both texts can be tapped for a meaning; the AI's sound has play, pause, seek and speed and fills the text as it plays
+ * (the fill is an estimate spread over the sound). Words worth learning are suggested and only saved when you tap Save.
+ */
 @Composable
 private fun TopicResult(v: SpeakingVersionEntity, vm: SpeakingViewModel, fromList: Boolean, onAgain: () -> Unit, onClose: () -> Unit) {
     val c = Fluvour.colors
+    val lang = vm.topic.collectAsStateWithLifecycle().value?.languageCode ?: "en"
+    val lookup: WordLookupViewModel = hiltViewModel()
     var confirmDelete by rememberSaveable(v.id) { mutableStateOf(false) }
     val marked = remember(v.substituted) { SpeakingParse.substitutedFrom(v.substituted) }
     val words = remember(v.newWords) { SpeakingParse.newWordsFrom(v.newWords) }
+    val speed by vm.speed.collectAsStateWithLifecycle()
+    val loadingKey by vm.loadingKey.collectAsStateWithLifecycle()
+    val meState by rememberPlayState { vm.playState("me") }
+    val aiState by rememberPlayState { vm.playState("improved") }
+    val improved = v.improved.orEmpty()
     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp)) {
         PageBar(onClose, "Your result", closeIcon = true)
-        Sm("Version ${v.versionNo} · you spoke for ${mmss(v.durationSec)}", Modifier.padding(top = 18.dp))
-        Compare("What you said", v.transcript, if (marked.isEmpty()) null else "Highlighted words were not in the language you are learning.", marked)
-        Compare("Improved version", v.improved.orEmpty(), action = { IconBtn(Icons.Outlined.VolumeUp, "Speak the improved version", { vm.speak(v.improved.orEmpty()) }) })
-        Column(Modifier.fillMaxWidth().padding(top = 18.dp)) {
-            HorizontalDivider(color = c.line)
-            Eyebrow("New words", Modifier.padding(top = 14.dp))
-            if (words.isEmpty()) Sm("No new words this time.", Modifier.padding(top = 6.dp))
-            words.forEach { w ->
-                Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Sm("Version ${v.versionNo} · you spoke for ${mmss(v.durationSec)}", Modifier.padding(top = 14.dp, bottom = 14.dp))
+
+        AuthorPanel(ai = false, title = "You said") {
+            TapText(v.transcript, lang, size = 21.sp, lit = meState.fraction, marked = marked, onWord = { w, l, r -> lookup.select(w, l, r, sentenceOf(v.transcript, w), lang) })
+            if (marked.isNotEmpty()) Sm("Words in accent colour were not in the language you are learning.", Modifier.padding(top = 8.dp), size = 12.sp)
+            if (v.audioPath != null) AudioBar(meState, speed, onPlay = { vm.playMine(v) }, onPause = { vm.pauseSound() }, onResume = { vm.resumeSound() },
+                onSeek = { vm.seekSound(it) }, onSpeed = { vm.setSpeed(it) }, modifier = Modifier.padding(top = 10.dp))
+        }
+
+        AuthorPanel(ai = true, title = "Improved version", modifier = Modifier.padding(top = 14.dp)) {
+            TapText(improved, lang, size = 21.sp, lit = aiState.fraction, compareTo = v.transcript, onWord = { w, l, r -> lookup.select(w, l, r, sentenceOf(improved, w), lang) })
+            Sm("Highlighted words are what the AI changed or added.", Modifier.padding(top = 8.dp), size = 12.sp)
+            AudioBar(aiState, speed, onPlay = { vm.playAi("improved", improved) }, onPause = { vm.pauseSound() }, onResume = { vm.resumeSound() },
+                onSeek = { vm.seekSound(it) }, onSpeed = { vm.setSpeed(it) }, loading = loadingKey == "improved" && !aiState.active, modifier = Modifier.padding(top = 10.dp))
+        }
+
+        AuthorPanel(ai = true, title = "Words worth learning", modifier = Modifier.padding(top = 14.dp)) {
+            if (words.isEmpty()) Sm("Nothing new this time.", size = 13.sp)
+            words.forEachIndexed { i, w ->
+                if (i > 0) HorizontalDivider(color = c.line, modifier = Modifier.padding(vertical = 10.dp))
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Column(Modifier.weight(1f)) {
-                        TargetText(w.word, size = 18.sp)
-                        Sm(w.meaning, size = 12.5.sp)
+                        TargetText(w.word, size = 19.sp)
+                        Sm(w.meaning, size = 13.sp)
                         w.example?.let { TargetText(it, Modifier.padding(top = 2.dp), size = 14.sp, color = c.mute) }
                     }
-                    if (w.cardId != null) {
-                        Column(horizontalAlignment = Alignment.End) {
-                            Sm("added to cards", size = 12.sp)
-                            SmallButton("Remove", { vm.removeCard(v.id, w.word) }, Modifier.padding(top = 6.dp), soft = true)
-                        }
-                    } else Sm("no new card", size = 12.sp)
+                    if (w.cardId != null) SmallButton("Saved", {}, soft = true) else SmallButton("Save", { vm.saveWord(v.id, w.word) })
                 }
             }
         }
+
         if (v.audioPath != null) {
             Column(Modifier.fillMaxWidth().padding(top = 18.dp)) {
-                HorizontalDivider(color = c.line)
                 if (!confirmDelete) {
-                    Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Sm("The recording is saved on this phone.", Modifier.weight(1f), size = 12.5.sp)
                         SmallButton("Delete recording", { confirmDelete = true }, soft = true)
                     }
                 } else {
-                    Sm("Delete the recording file? The text, new words and cards stay.", Modifier.padding(top = 12.dp), size = 12.5.sp)
+                    Sm("Delete the recording file? The text and saved cards stay.", size = 12.5.sp)
                     Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SmallButton("Delete", { vm.deleteAudio(v.id); confirmDelete = false })
+                        SmallButton("Delete", { vm.stopSound(); vm.deleteAudio(v.id); confirmDelete = false })
                         SmallButton("Keep it", { confirmDelete = false }, soft = true)
                     }
                 }
             }
         } else Sm("The recording file was deleted. The text is kept.", Modifier.padding(top = 18.dp), size = 12.5.sp)
         Row(Modifier.fillMaxWidth().padding(top = 22.dp, bottom = 24.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            FButton("Record again", onAgain, Modifier.weight(1f), outlined = true)
-            FButton(if (fromList) "Back" else "Done", onClose, Modifier.weight(1f))
+            FButton("Record again", { vm.stopSound(); onAgain() }, Modifier.weight(1f), outlined = true)
+            FButton(if (fromList) "Back" else "Done", { vm.stopSound(); onClose() }, Modifier.weight(1f))
         }
     }
+    OutputWordSheet(lookup)
 }
 
 /**
@@ -277,7 +280,11 @@ private fun VersionHistory(vm: SpeakingViewModel, versions: List<SpeakingVersion
     Column(Modifier.fillMaxWidth().padding(top = 22.dp)) {
         HorizontalDivider(color = c.line)
         Eyebrow("Your versions", Modifier.padding(top = 14.dp))
-        if (measures.size >= 2) MeasuresTable(measures.takeLast(5).map { it.first.versionNo to it.second }, SpeakingMeasures.change(measures.first().second, measures.last().second), measures.first().first.versionNo, measures.last().first.versionNo)
+        var compare by rememberSaveable { mutableStateOf(false) }
+        if (measures.size >= 2) {
+            LinkText(if (compare) "Hide comparison" else "Compare versions", { compare = !compare }, Modifier.padding(top = 8.dp))
+            if (compare) MeasuresTable(measures.takeLast(5).map { it.first.versionNo to it.second }, SpeakingMeasures.change(measures.first().second, measures.last().second), measures.first().first.versionNo, measures.last().first.versionNo)
+        }
         versions.asReversed().forEach { v ->
             val done = v.improved != null
             Row(Modifier.fillMaxWidth().clickable { if (done) vm.show(v.id) else vm.retry(v.id) }.padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {

@@ -41,6 +41,21 @@ class YouTubeSource @Inject constructor(private val extractor: ExtractorManager,
     /** Forgets the saved lookup of one video (its stream address failed to play), so the next [load] asks YouTube again. */
     fun forgetLookup(input: String, lang: String, nativeLang: String?) = YouTubeGuard.forget(lookupKey(input, lang, nativeLang))
 
+    /**
+     * Search suggestions while typing: the same Google service the YouTube app uses (and NewPipe's own suggestion call). It is asked directly
+     * so the updatable extractor does not change. Returns an empty list on any problem.
+     */
+    suspend fun suggest(query: String): List<String> = withContext(Dispatchers.IO) {
+        val q = query.trim()
+        if (q.isEmpty()) return@withContext emptyList()
+        try {
+            val url = "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&hl=en&q=" + java.net.URLEncoder.encode(q, "UTF-8")
+            val body = AppHttpFetcher.execute(HttpRequest("GET", url, emptyMap(), null)).body
+            val arr = org.json.JSONArray(body).optJSONArray(1) ?: return@withContext emptyList()
+            (0 until arr.length()).map { arr.optString(it) }.filter { it.isNotBlank() && !it.equals(q, ignoreCase = true) }.take(8)
+        } catch (_: Exception) { emptyList() }
+    }
+
     /** Video search through NewPipe (no API key). Uses YouTube's unofficial interfaces, so it can break like the stream loading does. */
     suspend fun search(query: String): Result<List<VideoHit>> = withContext(Dispatchers.IO) {
         withUpdateRetry("s:" + query.trim().lowercase()) {

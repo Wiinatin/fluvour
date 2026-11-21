@@ -31,8 +31,9 @@ object ImprovePrompt {
         return "A learner of $lang spoke this out loud (transcribed exactly, with mistakes). Words they said in another language because they did not know the $lang word: $subs.\n\n" +
             "Transcript:\n$transcript\n\n" +
             "Write the improved version: what a natural speaker of $lang would say to express the same thing. Keep the speaker's meaning and order of ideas. Do not add new ideas. Fix grammar, word choice and the substituted words.$lv " +
-            "Then list the new words: the $lang word for each substituted word (as used in the improved version, in its dictionary form), with its meaning in $own and, if it helps, one short $lang example sentence. " +
-            "At most $MAX_WORDS words. Skip words that are not really new vocabulary. " +
+            "Then list words worth learning, at most $MAX_WORDS, each in its dictionary form with its meaning in $own and, if it helps, one short $lang example sentence. " +
+            "First the $lang word for each substituted word. Then up to 5 useful words or phrases that the improved version uses and the speaker did not say, if they are natural for this level. " +
+            "Skip words that are not really new vocabulary. " +
             "Return JSON only, in this shape: {\"improved\":\"...\",\"newWords\":[{\"word\":\"...\",\"meaning\":\"...\",\"example\":\"...\"}]}. If there is nothing to improve, return the transcript as \"improved\" and an empty list."
     }
 }
