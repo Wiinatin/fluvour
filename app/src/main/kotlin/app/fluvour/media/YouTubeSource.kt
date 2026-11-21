@@ -153,6 +153,7 @@ class YouTubeSource @Inject constructor(private val extractor: ExtractorManager,
             if (LyricsPrefs.enabled && !hasWordTimes) {
                 val vid = Regex("""(?:v=|youtu\.be/|/shorts/|/embed/)([A-Za-z0-9_-]{11})""").find(url)?.groupValues?.get(1)
                 val found: List<app.fluvour.lyrics.Found> = if (vid == null) emptyList() else runCatching { lyricsFinder.findAll(vid, info.title, info.uploader, info.durationSeconds.toInt().coerceAtLeast(0), lang, lines) }.getOrDefault(emptyList())
+                if (found.isEmpty() && vid != null && lines.isEmpty()) note = (note ?: "") + " Lyrics finder: nothing found (SimpMusic, BetterLyrics, LyricsPlus, Kugou, LRCLIB)."
                 if (found.isNotEmpty()) {
                     val own = if (lines.isEmpty()) emptyList() else listOf(LyricsChoice("YouTube", lines, lines.any { it.words.size > 1 }, note))
                     val ext = found.map { LyricsChoice(it.source, it.lines, it.wordSynced, "Lyrics from ${it.source}" + if (it.wordSynced) " (word-synced)." else " (line-synced).") }
