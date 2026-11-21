@@ -46,6 +46,8 @@ jobs:
             echo "KEYSTORE_FILE=$RUNNER_TEMP/own.jks" >> "$GITHUB_ENV"
             echo "Using the keystore from the KEYSTORE_BASE64 secret."
           fi
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Build release APK
         env:
           APP_KEYSTORE_PASSWORD: ${{ secrets.APP_KEYSTORE_PASSWORD }}
