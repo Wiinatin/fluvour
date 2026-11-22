@@ -70,6 +70,13 @@ fun main() {
     val th = LyricsParsers.fromRows(listOf(Triple(0L, "", listOf(LyricsParsers.Syl(0, "สวัสดี"), LyricsParsers.Syl(500, "ครับ")))))
     check("thai stays separate", th[0].words.size == 2)
     check("shift", LyricsParsers.shift(t, 1000)[0].words[0].startMs == 11500L && LyricsParsers.shift(t, -99999)[0].startMs == 0L)
+    run {
+        fun sl(t: String) = SubLine(0L, 1000L, t, emptyList())
+        val good = listOf("ทุกความทรงจำ", "เธอยังอยู่ตรงนี้", "ฉันคิดถึงเธอ", "วันนี้ฟ้าสวย", "เราเคยรักกัน", "จะไม่ลืมเลย", "ทุกคืนวัน").map(::sl)
+        val bad = listOf("นาจากวันที่ฉันและเธอได้เคยบอกคำ", "ิ่งที่ฉันเคยมี", "า", "ฉันคิดถึงเธอ", "วันนี้ฟ้าสวย", "เราเคยรักกัน", "จะไม่ลืมเลย", "ทุกคืนวัน").map(::sl)
+        check("good lines not broken", !LyricsText.looksBroken(good))
+        check("cut lines broken", LyricsText.looksBroken(bad))
+    }
     println(if (fails == 0) "ALL OK" else "$fails FAILED")
     if (fails > 0) System.exit(1)
 }

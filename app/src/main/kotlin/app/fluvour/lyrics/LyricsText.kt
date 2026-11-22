@@ -164,4 +164,20 @@ object LyricsText {
         val devs = offsets.map { abs(it - med) }.sorted()
         return Agreement(offsets.size, sample.size, med, devs[devs.size / 2])
     }
+
+    private fun thaiDependent(c: Char) = c == '\u0E30' || c == '\u0E31' || c in '\u0E32'..'\u0E3A' || c == '\u0E45' || c in '\u0E47'..'\u0E4E'
+
+    /**
+     * Do these lines look cut in the middle of words? True when lines start with a Thai vowel or tone mark (no Thai word does) or hold
+     * a single letter. Some YouTube captions are split by time, not by meaning, and give lines like that; other sources are then better.
+     */
+    fun looksBroken(lines: List<SubLine>): Boolean {
+        val sample = lines.take(80).filter { it.text.isNotBlank() }
+        if (sample.size < 6) return false
+        val bad = sample.count { l ->
+            val t = l.text.trim()
+            thaiDependent(t.first()) || t.count { Character.isLetter(it) } <= 1
+        }
+        return bad >= 2 && bad.toDouble() / sample.size >= 0.04
+    }
 }

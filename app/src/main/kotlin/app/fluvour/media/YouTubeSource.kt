@@ -2,6 +2,7 @@ package app.fluvour.media
 
 import app.fluvour.lyrics.LyricsFinder
 import app.fluvour.lyrics.LyricsPrefs
+import app.fluvour.lyrics.LyricsText
 import app.fluvour.extractor.api.HttpRequest
 import app.fluvour.extractor.api.SubtitleTrack
 import app.fluvour.reading.ClipMeasurer
@@ -164,17 +165,18 @@ class YouTubeSource @Inject constructor(private val extractor: ExtractorManager,
             // Word-synced lyrics from other places (SimpMusic, BetterLyrics, LyricsPlus, Kugou, LRCLIB). A verified word-sync beats YouTube's own lines.
             var choices = emptyList<LyricsChoice>()
             var choice = 0
-            val hasWordTimes = lines.any { it.words.size > 1 } && used?.isAuto == false
+            val broken = LyricsText.looksBroken(lines)   // captions cut in the middle of words: do not trust them
+            val hasWordTimes = lines.any { it.words.size > 1 } && used?.isAuto == false && !broken
             if (LyricsPrefs.enabled && !hasWordTimes) {
                 val vid = Regex("""(?:v=|youtu\.be/|/shorts/|/embed/)([A-Za-z0-9_-]{11})""").find(url)?.groupValues?.get(1)
-                val found: List<app.fluvour.lyrics.Found> = if (vid == null) emptyList() else runCatching { lyricsFinder.findAll(vid, info.title, info.uploader, info.durationSeconds.toInt().coerceAtLeast(0), lang, lines) }.getOrDefault(emptyList())
-                if (found.isEmpty() && vid != null && lines.isEmpty()) note = (note ?: "") + " Lyrics finder: nothing found (SimpMusic, BetterLyrics, LyricsPlus, Kugou, LRCLIB)."
+                val found: List<app.fluvour.lyrics.Found> = if (vid == null) emptyList() else runCatching { lyricsFinder.findAll(vid, info.title, info.uploader, info.durationSeconds.toInt().coerceAtLeast(0), lang, if (broken) emptyList() else lines) }.getOrDefault(emptyList())
+                if (found.isEmpty() && vid != null && (lines.isEmpty() || broken)) note = (note ?: "") + " Lyrics finder: nothing found (SimpMusic, BetterLyrics, LyricsPlus, Kugou, LRCLIB)."
                 if (found.isNotEmpty()) {
-                    val own = if (lines.isEmpty()) emptyList() else listOf(LyricsChoice("YouTube", lines, lines.any { it.words.size > 1 }, note))
+                    val own = if (lines.isEmpty() || broken) emptyList() else listOf(LyricsChoice("YouTube", lines, lines.any { it.words.size > 1 }, note))
                     val ext = found.map { LyricsChoice(it.source, it.lines, it.wordSynced, "Lyrics from ${it.source}" + if (it.wordSynced) " (word-synced)." else " (line-synced).") }
                     choices = own + ext
                     // word-sync wins; a line-synced find is only the default when YouTube has no lines
-                    choice = choices.indexOfFirst { it.label != "YouTube" && it.wordSynced }.takeIf { it >= 0 } ?: if (lines.isEmpty()) 0 else -1
+                    choice = choices.indexOfFirst { it.label != "YouTube" && it.wordSynced }.takeIf { it >= 0 } ?: if (lines.isEmpty() || broken) 0 else -1
                     if (choice >= 0) { lines = choices[choice].lines; note = choices[choice].note } else choice = 0
                     if (choices.size < 2) choices = emptyList()
                 }
